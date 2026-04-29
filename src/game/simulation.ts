@@ -68,6 +68,7 @@ let fxIdCounter = 1;
 
 const BOAT_ACCEL = 260;
 const BOAT_MAX_SPEED = 170;
+const BOAT_MIN_SPEED = 20;
 const BOAT_FRICTION = 0.94;
 const BOAT_RADIUS = 22;
 const WHALE_RADIUS = 34;
@@ -103,9 +104,9 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
     boat.vy *= -0.4;
   }
   const speedMul = onShallow ? 0.35 : 1;
-  if (onShallow) {
-    boat.vx *= Math.pow(0.82, dt * 60);
-    boat.vy *= Math.pow(0.82, dt * 60);
+  if (onShallow && speed > BOAT_MIN_SPEED) {
+    boat.vx *= Math.pow(0.9, dt * 60);
+    boat.vy *= Math.pow(0.9, dt * 60);
   }
 
   boat.x += boat.vx * dt * speedMul;

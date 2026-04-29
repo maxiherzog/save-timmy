@@ -13,32 +13,30 @@ function randomId() {
 }
 
 export default function App() {
-  const [view, setView] = useState<View>({ kind: 'landing' });
-  const [prefillCode, setPrefillCode] = useState('');
+  const [view, setView] = useState<View>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('host') === '1') return { kind: 'host' };
+    return { kind: 'landing' };
+  });
+
+  const [prefillCode, setPrefillCode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('join')?.toUpperCase() || '';
+  });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const joinCode = params.get('join');
-    const hostFlag = params.get('host');
-    if (hostFlag === '1') {
-      setView({ kind: 'host' });
-      return;
-    }
-    if (joinCode) {
-      const code = joinCode.toUpperCase();
-      const stored = localStorage.getItem(`savetimmy:player:${code}`);
+    if (view.kind === 'landing' && prefillCode) {
+      const stored = localStorage.getItem(`savetimmy:player:${prefillCode}`);
       if (stored) {
         try {
           const p = JSON.parse(stored);
           if (p.playerId && p.name) {
-            setView({ kind: 'player', code, name: p.name, playerId: p.playerId });
-            return;
+            setView({ kind: 'player', code: prefillCode, name: p.name, playerId: p.playerId });
           }
         } catch {}
       }
-      setPrefillCode(code);
     }
-  }, []);
+  }, [prefillCode, view.kind]);
 
   function goHome() {
     const url = new URL(window.location.href);

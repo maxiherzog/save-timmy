@@ -1,8 +1,149 @@
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, DAY_LENGTH, MAX_DAYS, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
-import { SANDBANKS, HEAL_ZONES, BARGE, COAST_TOP, COAST_BOTTOM, anySandbank, pointInHealZone } from './map';
-import type { CharacterId } from './characters';
+import { createMap, HEAL_ZONES, BARGE, COAST_TOP, COAST_BOTTOM, anySandbank, pointInHealZone } from './map';
 
+// ... (rest of the file remains the same until createInitialState)
+
+export function createInitialState(code: string): GameState {
+  const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const sandbanks = createMap(seed);
+  return {
+    code,
+    phase: 'lobby',
+    day: 1,
+    dayProgress: 0,
+    dayLength: DAY_LENGTH,
+    maxDays: MAX_DAYS,
+    players: {},
+    whale: createInitialWhale(),
+    sandbanks,
+    healZones: HEAL_ZONES,
+    barge: BARGE,
+    vote: { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} },
+    ended: null,
+    bannerMessage: '',
+    bannerUntil: 0,
+    fx: [],
+    bargeDrift: { nextDriftAt: 0, driftingUntil: 0, vx: 0, vy: 0 },
+  };
+}
+
+// ... (rest of the file remains the same until updateBoat)
+
+function updateBoat(boat: Boat, input: PlayerInput, dt: number, state: GameState) {
+  if (!boat.alive) return;
+  const ix = Math.max(-1, Math.min(1, input.joystickX));
+  const iy = Math.max(-1, Math.min(1, input.joystickY));
+  const mag = Math.sqrt(ix * ix + iy * iy);
+  if (mag > 0.08) {
+    const nx = ix / Math.max(mag, 1);
+    const ny = iy / Math.max(mag, 1);
+    boat.vx += nx * BOAT_ACCEL * dt;
+    boat.vy += ny * BOAT_ACCEL * dt;
+    boat.heading = Math.atan2(ny, nx);
+  }
+  boat.vx *= Math.pow(BOAT_FRICTION, dt * 60);
+  boat.vy *= Math.pow(BOAT_FRICTION, dt * 60);
+  const speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
+  if (speed > BOAT_MAX_SPEED) {
+    boat.vx = (boat.vx / speed) * BOAT_MAX_SPEED;
+    boat.vy = (boat.vy / speed) * BOAT_MAX_SPEED;
+  }
+
+  // Sandbank slowdown - boats that stray onto a bank are dragged to a crawl
+  const onShallow = anySandbank(state.sandbanks, boat.x, boat.y);
+  const speedMul = onShallow ? 0.35 : 1;
+  if (onShallow) {
+    boat.vx *= Math.pow(0.82, dt * 60);
+    boat.vy *= Math.pow(0.82, dt * 60);
+  }
+
+  boat.x += boat.vx * dt * speedMul;
+  boat.y += boat.vy * dt * speedMul;
+  boat.speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy) * speedMul;
+
+  // Clamp to map
+  if (boat.x < 30) { boat.x = 30; boat.vx = 0; }
+  if (boat.x > MAP_W - 30) { boat.x = MAP_W - 30; boat.vx = 0; }
+  // Use a generic boundary instead of COAST_TOP/COAST_BOTTOM
+  if (boat.y < 30) { boat.y = 30; boat.vy = 0; }
+  if (boat.y > MAP_H - 30) { boat.y = MAP_H - 30; boat.vy = 0; }
+
+
+  boat.hupenCooldown = Math.max(0, boat.hupenCooldown - dt);
+  boat.trampelnCooldown = Math.max(0, boat.trampelnCooldown - dt);
+  boat.ramCooldown = Math.max(0, boat.ramCooldown - dt);
+  boat.trampelnStamina = Math.min(TRAMPELN_STAMINA_MAX, boat.trampelnStamina + TRAMPELN_REGEN * dt);
+}
+// ... (the rest is mostly fine, just need to adjust the whale's sandbank checks)
+function updateWhale(state: GameState, dt: number) {
+  const w = state.whale;
+  if (w.state === 'dead') return;
+
+  w.wanderTimer -= dt;
+  if (w.wanderTimer <= 0) {
+    w.wanderTimer = 3 + Math.random() * 2;
+    // westward bias initially, but drifts toward current heading
+    w.wanderHeading += (Math.random() - 0.5) * 0.5;
+  }
+
+  // Instinctive sandbank avoidance: look-ahead; if water ahead would be shallow, steer away
+  if (w.state !== 'stranded' && w.state !== 'dead') {
+    const lookDist = 75;
+    const ax = w.x + Math.cos(w.wanderHeading) * lookDist;
+    const ay = w.y + Math.sin(w.wanderHeading) * lookDist;
+    const aheadHit = anySandbank(state.sandbanks, ax, ay);
+    if (aheadHit) {
+      // Try left and right and pick the clearer side
+      const left = w.wanderHeading - 0.9;
+      const right = w.wanderHeading + 0.9;
+      const lx = w.x + Math.cos(left) * lookDist;
+      const ly = w.y + Math.sin(left) * lookDist;
+      const rx = w.x + Math.cos(right) * lookDist;
+      const ry = w.y + Math.sin(right) * lookDist;
+      const leftBlocked = !!anySandbank(state.sandbanks, lx, ly);
+      const rightBlocked = !!anySandbank(state.sandbanks, rx, ry);
+      if (!leftBlocked && rightBlocked) w.wanderHeading = left;
+      else if (!rightBlocked && leftBlocked) w.wanderHeading = right;
+      else w.wanderHeading += (Math.random() < 0.5 ? -1 : 1) * 0.9;
+    }
+  }
+
+  const hpMul = w.hp < 10 ? 0 : w.hp < 30 ? 0.5 : 1;
+  const baseSpeed = 28 * hpMul;
+
+  const shallow = anySandbank(state.sandbanks, w.x, w.y);
+  if (shallow) {
+    w.state = 'stranded';
+    w.strandTimer += dt;
+    // Ramped damage: grace period first, then slowly worsens. Starts at 0, up to ~2.2 HP/s
+    const dmgPerSec = Math.max(0, Math.min(2.2, (w.strandTimer - 2) * 0.5));
+    w.hp -= dt * dmgPerSec;
+  } else {
+    w.state = w.hp <= 0 ? 'dead' : w.hp < 15 ? 'dying' : 'swimming';
+    w.strandTimer = 0;
+  }
+
+  if (w.state === 'swimming' || w.state === 'dying') {
+    w.heading += (w.wanderHeading - w.heading) * dt * 0.8;
+    w.x += Math.cos(w.heading) * baseSpeed * dt;
+    w.y += Math.sin(w.heading) * baseSpeed * dt;
+  }
+
+  // clamp whale to water (simple boundary)
+  if (w.x < 60) { w.x = 60; w.wanderHeading = 0; }
+  if (w.x > MAP_W - 60) { w.x = MAP_W - 60; w.wanderHeading = Math.PI; }
+  if (w.y < 60) { w.y = 60; w.wanderHeading = Math.PI / 2; }
+  if (w.y > MAP_H - 60) { w.y = MAP_H - 60; w.wanderHeading = -Math.PI / 2; }
+  
+  // ... (rest of the function is okay)
+  
+  for (const p of Object.values(state.players)) {
+    if (p.connected) updateBoat(p.boat, p.input, dt, state);
+  }
+  
+  
+  
 export function createInitialWhale(): Whale {
   return {
     x: 180,

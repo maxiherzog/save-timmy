@@ -164,7 +164,7 @@ export function GameCanvas({ state }: Props) {
         ctx.restore();
       }
 
-      // Whale
+            // Whale
       const w = s.whale;
       if (w.state !== 'dead') {
         ctx.save();
@@ -172,35 +172,7 @@ export function GameCanvas({ state }: Props) {
         ctx.rotate(w.heading);
         const alpha = w.hp < 30 ? 0.6 : w.hp < 15 ? 0.35 : 1;
         ctx.globalAlpha = alpha;
-        // body
-        const bob = Math.sin(whalePhase * 2) * 2;
-        ctx.fillStyle = '#1f2937';
-        ctx.beginPath();
-        ctx.ellipse(0, bob, 48, 22, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // belly
-        ctx.fillStyle = '#d1d5db';
-        ctx.beginPath();
-        ctx.ellipse(-4, 8 + bob, 38, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // tail
-        ctx.fillStyle = '#1f2937';
-        ctx.beginPath();
-        ctx.moveTo(-46, bob);
-        ctx.lineTo(-64, -16 + bob);
-        ctx.lineTo(-60, 0 + bob);
-        ctx.lineTo(-64, 16 + bob);
-        ctx.closePath();
-        ctx.fill();
-        // eye
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(28, -6 + bob, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(29, -6 + bob, 2, 0, Math.PI * 2);
-        ctx.fill();
+        drawWhale(ctx, w, whalePhase);
         ctx.restore();
 
         // water spout for healthy whale
@@ -285,20 +257,9 @@ export function GameCanvas({ state }: Props) {
         ctx.font = '600 13px system-ui';
         ctx.fillText(charText, 0, -8);
         ctx.restore();
-
-        // hupen burst effect
-        if (p.boat.hupenCooldown > 2.7) {
-          ctx.save();
-          ctx.translate(p.boat.x, p.boat.y);
-          ctx.globalAlpha = (p.boat.hupenCooldown - 2.7) / 0.3;
-          ctx.strokeStyle = '#f87171';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.arc(0, 0, 230 * (1 - (p.boat.hupenCooldown - 2.7) / 0.3), 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-        }
       }
+
+      drawFx(ctx, s);
 
       // dying vignette
       if (w.hp < 25 && w.state !== 'dead') {
@@ -327,6 +288,88 @@ export function GameCanvas({ state }: Props) {
       <HUD state={state} />
     </div>
   );
+}
+
+function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], phase: number) {
+  const bob = Math.sin(phase * 2) * 2;
+  const anim = Math.sin(phase * 2.2) * (whale.state === 'stranded' ? 0.2 : 1);
+
+  // Body
+  ctx.fillStyle = '#1f2937';
+  ctx.beginPath();
+  ctx.ellipse(0, bob, 48, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Belly
+  ctx.fillStyle = '#d1d5db';
+  ctx.beginPath();
+  ctx.ellipse(-4, 8 + bob, 38, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tail
+  ctx.fillStyle = '#1f2937';
+  ctx.beginPath();
+  ctx.moveTo(-46, bob);
+  ctx.bezierCurveTo(-55, -8 + bob, -58, -14 + bob + anim * 5, -64, -16 + bob + anim * 8);
+  ctx.bezierCurveTo(-60, bob, -60, bob, -64, 16 + bob - anim * 8);
+  ctx.bezierCurveTo(-58, 14 + bob, -55, 8 + bob, -46, bob);
+  ctx.closePath();
+  ctx.fill();
+
+  // Expression based on state
+  let mouthY = 2;
+  let eyeBrowTranslate = 2;
+  if (whale.state === 'stranded' || whale.hp < 30) {
+    mouthY = -2; // Frown
+    eyeBrowTranslate = -1; // Sad eyebrow
+  } else if (whale.hp < 60) {
+    mouthY = 0; // Neutral
+    eyeBrowTranslate = 1;
+  }
+
+  // Eye
+  const eyeX = 28;
+  const eyeY = -6 + bob;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(eyeX + 1, eyeY, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyebrow
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(eyeX - 2, eyeY - 3 + eyeBrowTranslate);
+  ctx.bezierCurveTo(eyeX, eyeY - 4 + eyeBrowTranslate, eyeX + 2, eyeY - 3 + eyeBrowTranslate, eyeX + 3, eyeY - 2 + eyeBrowTranslate);
+  ctx.stroke();
+
+  // Mouth
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(26, 4 + bob);
+  ctx.bezierCurveTo(30, 4 + bob + mouthY, 34, 4 + bob + mouthY, 38, 4 + bob);
+  ctx.stroke();
+}
+
+function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
+  for (const p of Object.values(state.players)) {
+    if (p.boat.hupenCooldown > 2.7) {
+      ctx.save();
+      ctx.translate(p.boat.x, p.boat.y);
+      ctx.globalAlpha = (p.boat.hupenCooldown - 2.7) / 0.3;
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 230 * (1 - (p.boat.hupenCooldown - 2.7) / 0.3), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
 }
 
 function HUD({ state }: { state: GameState }) {

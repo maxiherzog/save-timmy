@@ -125,24 +125,53 @@ function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number,
   };
 }
 
-export const SANDBANKS: Sandbank[] = [
-  // Inner named shoals - organic blob shapes
-  makeBank(560, 340, 110, 62, 'Sandbank Niendorf', 101, 0.32),
-  makeBank(920, 480, 140, 72, 'Timmendorf Shoals', 102, 0.38),
-  makeBank(1140, 290, 100, 56, 'Sandbank Poel', 103, 0.34),
-  makeBank(720, 640, 120, 62, 'Wismar Flats', 104, 0.36),
-  makeBank(1160, 620, 95, 54, 'Boltenhagen Bank', 105, 0.30),
+export function createMap(seed: number) {
+  const rng = mulberry32(seed);
+  const sandbanks: Sandbank[] = [];
 
-  // Continuous coastline - top (narrower than before for more water)
-  makeCoastBank('top', 0, MAP_W, 55, 105, 201),
-  // Bottom - leave a clear approach near barge (right third)
-  makeCoastBank('bottom', 0, 1200, 55, 100, 202),
-  makeCoastBank('bottom', 1200, MAP_W, 30, 55, 203),
-  // Left coastline
-  makeCoastBank('left', 180, MAP_H - 180, 60, 115, 204),
-  // Right coastline - only upper portion, keep barge approach open
-  makeCoastBank('right', 180, 460, 55, 100, 205),
-];
+  // 1. Create the outer boundary
+  const wallThickness = 100;
+  const wallVariance = 45;
+  sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
+  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
+  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
+  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
+
+  // 2. Generate random inner sandbanks
+  const numBanks = 4 + Math.floor(rng() * 3); // 4 to 6 banks
+  const takenAreas: {x: number, y: number, rx: number, ry: number}[] = [];
+
+  for (let i = 0; i < numBanks; i++) {
+    let x, y, rx, ry;
+    let attempts = 0;
+    let overlaps = true;
+
+    while (overlaps && attempts < 20) {
+      rx = 100 + rng() * 60; // Random width
+      ry = 50 + rng() * 30;  // Random height
+      x = wallThickness + rx + rng() * (MAP_W - 2 * (wallThickness + rx));
+      y = wallThickness + ry + rng() * (MAP_H - 2 * (wallThickness + ry));
+      
+      overlaps = false;
+      for (const area of takenAreas) {
+        // Simple circle-based collision detection for placement
+        const dist = Math.sqrt(Math.pow(x - area.x, 2) + Math.pow(y - area.y, 2));
+        if (dist < (rx + area.rx) * 1.2 || dist < (ry + area.ry) * 1.2) {
+          overlaps = true;
+          break;
+        }
+      }
+      attempts++;
+    }
+
+    if (!overlaps) {
+      sandbanks.push(makeBank(x, y, rx, ry, `Bank-${i}`, rng() * 1e6));
+      takenAreas.push({x, y, rx, ry});
+    }
+  }
+
+  return sandbanks;
+}
 
 export const HEAL_ZONES: HealZone[] = [
   { x: 280, y: 440, w: 180, h: 40 },
@@ -179,8 +208,8 @@ export function pointInSandbank(x: number, y: number, sb: Sandbank): boolean {
   return pointInPoly(x, y, sb.poly);
 }
 
-export function anySandbank(x: number, y: number): Sandbank | null {
-  for (const sb of SANDBANKS) if (pointInSandbank(x, y, sb)) return sb;
+export function anySandbank(sandbanks: Sandbank[], x: number, y: number): Sandbank | null {
+  for (const sb of sandbanks) if (pointInSandbank(x, y, sb)) return sb;
   return null;
 }
 

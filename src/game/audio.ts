@@ -4,6 +4,21 @@ import crashSound from '../assets/crash.mp3';
 let ctx: AudioContext | null = null;
 const audioCache: Record<string, AudioBuffer> = {};
 
+function getCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!ctx) {
+    const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+    if (!AC) return null;
+    ctx = new AC();
+  }
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  return ctx;
+}
+
+export function unlockAudio() {
+  getCtx();
+}
+
 async function loadSound(c: AudioContext, url: string): Promise<AudioBuffer | null> {
   if (audioCache[url]) return audioCache[url];
   try {

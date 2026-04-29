@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHost } from '../game/useHost';
-import { playHupen, playTrampeln, unlockAudio } from '../game/audio';
+import { unlockAudio } from '../game/audio';
 import { GameCanvas } from '../components/GameCanvas';
 import { VotingOverlay } from '../components/VotingOverlay';
 import { EndScreen } from '../components/EndScreen';
@@ -26,17 +26,7 @@ export function HostView({ onLeave }: HostViewProps) {
   const [token] = useState(() => randomToken());
   const [copied, setCopied] = useState(false);
   const { state, startMatch, rematch } = useHost(code);
-  const lastFxIdRef = useRef(0);
 
-  useEffect(() => {
-    if (!state?.fx?.length) return;
-    for (const f of state.fx) {
-      if (f.id <= lastFxIdRef.current) continue;
-      if (f.kind === 'hupen') playHupen();
-      else playTrampeln();
-    }
-    lastFxIdRef.current = state.fx[state.fx.length - 1].id;
-  }, [state?.fx]);
 
   const joinUrl = useMemo(() => {
     const base = window.location.origin + window.location.pathname.replace(/\/$/, '');

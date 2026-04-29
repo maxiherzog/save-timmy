@@ -24,8 +24,9 @@ type HostViewProps = { onLeave: () => void };
 export function HostView({ onLeave }: HostViewProps) {
   const [code] = useState(() => randomCode());
   const [token] = useState(() => randomToken());
+  const [imposterCount, setImposterCount] = useState<number>(1);
   const [copied, setCopied] = useState(false);
-  const { state, startMatch, rematch } = useHost(code, token);
+  const { state, startMatch, rematch } = useHost(code, token, imposterCount);
 
 
   const joinUrl = useMemo(() => {
@@ -101,9 +102,21 @@ export function HostView({ onLeave }: HostViewProps) {
               ))}
             </div>
 
+            <div className="mt-6">
+              <div className="text-sm uppercase tracking-widest text-slate-500 mb-3">Anzahl Saboteure</div>
+              <input
+                type="number"
+                min="1"
+                max="3"
+                value={imposterCount}
+                onChange={(e) => setImposterCount(parseInt(e.target.value) || 1)}
+                className="w-full p-3 rounded-lg border border-slate-200 text-center text-3xl font-bold"
+              />
+            </div>
+
             <button
               disabled={players.length < 2}
-              onClick={() => { unlockAudio(); startMatch(); }}
+              onClick={() => { unlockAudio(); startMatch(imposterCount); }}
               className="mt-6 w-full bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-lg py-3 rounded-lg transition"
             >
               {players.length < 2 ? 'Mindestens 2 Spieler nötig' : `Spiel starten`}

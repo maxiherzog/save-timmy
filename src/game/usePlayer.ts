@@ -67,10 +67,6 @@ export function usePlayer(code: string, playerId: string, name: string) {
 
   function setInput(input: Partial<PlayerInput>) {
     inputRef.current = { ...inputRef.current, ...input };
-    if (chRef.current) {
-      sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current } }).catch(() => {});
-      lastSentRef.current = JSON.stringify(inputRef.current);
-    }
   }
 
   function pressConference() {

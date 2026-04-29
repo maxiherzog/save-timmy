@@ -152,7 +152,7 @@ function updateWhale(state: GameState, dt: number) {
     w.wanderHeading += (Math.random() - 0.5) * 0.5;
   }
 
-  if (w.state !== 'stranded' && w.state !== 'dead') {
+  if (w.state !== 'stranded') {
     const lookDist = 75;
     const ax = w.x + Math.cos(w.wanderHeading) * lookDist;
     const ay = w.y + Math.sin(w.wanderHeading) * lookDist;
@@ -262,6 +262,10 @@ function updateBargeDrift(state: GameState, dt: number, now: number) {
 }
 
 export function stepSimulation(state: GameState, dt: number, now: number): GameState {
+  if (state.phase === 'voting' && state.vote.active && now >= state.vote.endsAt) {
+    resolveVote(state);
+  }
+
   if (state.phase !== 'playing') return state;
 
   const fxCutoff = now - 2;

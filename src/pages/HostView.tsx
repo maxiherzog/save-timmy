@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useHost } from '../game/useHost';
 import { unlockAudio } from '../game/audio';
 import { GameCanvas } from '../components/GameCanvas';
@@ -25,7 +25,7 @@ export function HostView({ onLeave }: HostViewProps) {
   const [code] = useState(() => randomCode());
   const [token] = useState(() => randomToken());
   const [copied, setCopied] = useState(false);
-  const { state, startMatch, rematch } = useHost(code);
+  const { state, startMatch, rematch } = useHost(code, token);
 
 
   const joinUrl = useMemo(() => {
@@ -186,7 +186,7 @@ export function HostView({ onLeave }: HostViewProps) {
       )}
 
       {state.phase === 'voting' && <VotingOverlay state={state} />}
-      {state.phase === 'ended' && <EndScreen state={ate} onRematch={rematch} onLeave={onLeave} isHost />}
+      {state.phase === 'ended' && <EndScreen state={state} onRematch={rematch} onLeave={onLeave} isHost />}
     </div>
   );
 }

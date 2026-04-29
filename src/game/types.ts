@@ -38,6 +38,7 @@ export type Whale = {
   bargeTimer: number;
   strandTimer: number;
   healCooldown: number;
+  soundCooldown: number;
 };
 
 export type Sandbank = {
@@ -107,7 +108,7 @@ export type GameState = {
   };
   bannerMessage: string;
   bannerUntil: number;
-  fx: Array<{ id: number; kind: 'hupen' | 'trampeln'; x: number; y: number; t: number }>;
+  fx: Array<{ id: number; kind: 'hupen' | 'trampeln' | 'crash'; x: number; y: number; t: number }>;
   bargeDrift: {
     nextDriftAt: number;
     driftingUntil: number;

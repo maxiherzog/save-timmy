@@ -5,9 +5,9 @@
 html, body, #root {
   height: 100%;
   margin: 0;
-  background: #020617;
+  background: #ffffff;
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  color: #fff;
+  color: #1a1a1a;
 }
 
 * {

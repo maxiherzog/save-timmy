@@ -1,5 +1,7 @@
 # Ab in die Barge! 🐋
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/7dc0e1d5-ec62-41bf-ab3b-57e28e5fee38/deploy-status)](https://app.netlify.com/projects/extraordinary-cajeta-f36e98/deploys)
+
 Ein lokales Multiplayer-Partyspiel im ".io"-Stil, bei dem Spieler gemeinsam einen gestrandeten Wal (Timmy) in Sicherheit navigieren müssen – doch einer unter ihnen ist der Saboteur!
 
 Ein Gerät (Laptop/Tablet/TV) hostet das Spielfeld, während 4 bis 8 Spieler ihre Smartphones als Controller ("Boote") nutzen.

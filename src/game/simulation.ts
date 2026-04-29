@@ -70,6 +70,30 @@ const BOAT_FRICTION = 0.94;
 const BOAT_RADIUS = 22;
 const WHALE_RADIUS = 34;
 
+function handleBargeCollision(entity: {x: number, y: number}, radius: number, state: GameState) {
+  const b = state.barge;
+  // Entity inside barge box
+  if (entity.x + radius > b.x && entity.x - radius < b.x + b.w &&
+      entity.y + radius > b.y && entity.y - radius < b.y + b.h) {
+    
+    // Check if in opening (left side of barge)
+    const inOpening = entity.y > b.openingY && entity.y < b.openingY + b.openingSize && entity.x - radius < b.x + b.w;
+    if (inOpening) return;
+
+    // Push out to nearest edge
+    const distLeft = (entity.x + radius) - b.x;
+    const distRight = (b.x + b.w) - (entity.x - radius);
+    const distTop = (entity.y + radius) - b.y;
+    const distBottom = (b.y + b.h) - (entity.y - radius);
+    
+    const min = Math.min(distLeft, distRight, distTop, distBottom);
+    if (min === distLeft) entity.x = b.x - radius;
+    else if (min === distRight) entity.x = b.x + b.w + radius;
+    else if (min === distTop) entity.y = b.y - radius;
+    else entity.y = b.y + b.h + radius;
+  }
+}
+
 function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: number, state: GameState) {
   const { boat } = p;
   if (!boat.alive) return;
@@ -119,7 +143,27 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
   boat.trampelnCooldown = Math.max(0, boat.trampelnCooldown - dt);
   boat.ramCooldown = Math.max(0, boat.ramCooldown - dt);
   boat.trampelnStamina = Math.min(TRAMPELN_STAMINA_MAX, boat.trampelnStamina + TRAMPELN_REGEN * dt);
+  handleBargeCollision(boat, BOAT_RADIUS, state);
 }
+
+function resolveCollision(a: {x: number, y: number}, b: {x: number, y: number}, radiusSum: number) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < radiusSum && dist > 0.01) {
+    const overlap = radiusSum - dist;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const pushX = nx * (overlap / 2);
+    const pushY = ny * (overlap / 2);
+    a.x += pushX;
+    a.y += pushY;
+    b.x -= pushX;
+    b.y -= pushY;
+  }
+}
+// (Wait, I already added resolveCollision in the previous edit, but it was just above updateBoat)
+
 
 function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, strength: number) {
   const dx = whale.x - srcX;
@@ -203,14 +247,15 @@ function updateWhale(state: GameState, dt: number) {
     const dx = w.x - p.boat.x;
     const dy = w.y - p.boat.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < WHALE_RADIUS + BOAT_RADIUS && p.boat.ramCooldown <= 0) {
-      const speedFactor = 0.5 + Math.min(1, p.boat.speed / BOAT_MAX_SPEED);
-      w.hp -= 5 * speedFactor;
-      p.boat.stats.rams += 1;
-      p.boat.ramCooldown = 1;
-      if (dist > 0.01) {
-        w.x += (dx / dist) * 80 * dt;
-        w.y += (dy / dist) * 80 * dt;
+    // Use resolveCollision to prevent overlap, but keep the ram mechanic
+    const radiusSum = WHALE_RADIUS + BOAT_RADIUS;
+    if (dist < radiusSum) {
+      resolveCollision(w, p.boat, radiusSum);
+      if (p.boat.ramCooldown <= 0) {
+        const speedFactor = 0.5 + Math.min(1, p.boat.speed / BOAT_MAX_SPEED);
+        w.hp -= 5 * speedFactor;
+        p.boat.stats.rams += 1;
+        p.boat.ramCooldown = 1;
       }
     }
     if (p.input.hupen && p.boat.hupenCooldown <= 0) {
@@ -233,6 +278,7 @@ function updateWhale(state: GameState, dt: number) {
   }
 
   w.hp = Math.max(0, Math.min(WHALE_MAX_HP, w.hp));
+  handleBargeCollision(w, WHALE_RADIUS, state);
 }
 
 function updateBargeDrift(state: GameState, dt: number, now: number) {
@@ -277,16 +323,14 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   for (let i = 0; i < players.length; i++) {
     for (let j = i + 1; j < players.length; j++) {
       const p1 = players[i], p2 = players[j];
-      if (!p1.boat.alive || !p2.boat.alive || p1.boat.ramCooldown > 0.5 || p2.boat.ramCooldown > 0.5) continue;
+      if (!p1.boat.alive || !p2.boat.alive) continue;
+      const radiusSum = BOAT_RADIUS * 2;
       const dx = p1.boat.x - p2.boat.x, dy = p1.boat.y - p2.boat.y;
-      if (dx * dx + dy * dy < (BOAT_RADIUS * 2) ** 2) {
+      if (dx * dx + dy * dy < radiusSum * radiusSum) {
         playCrashSound(1);
         state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (p1.boat.x + p2.boat.x) / 2, y: (p1.boat.y + p2.boat.y) / 2, t: now });
+        resolveCollision(p1.boat, p2.boat, radiusSum);
         p1.boat.ramCooldown = 1; p2.boat.ramCooldown = 1;
-        const speed1 = Math.sqrt(p1.boat.vx ** 2 + p1.boat.vy ** 2);
-        const speed2 = Math.sqrt(p2.boat.vx ** 2 + p2.boat.vy ** 2);
-        if (speed1 > 30) { p2.boat.vx += p1.boat.vx * 0.4; p2.boat.vy += p1.boat.vy * 0.4; }
-        if (speed2 > 30) { p1.boat.vx += p2.boat.vx * 0.4; p1.boat.vy += p2.boat.vy * 0.4; }
       }
     }
   }

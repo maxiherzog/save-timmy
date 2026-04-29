@@ -20,9 +20,8 @@ function organicBlob(
   ry: number,
   points: number,
   jitter: number,
-  seed: number,
+  rng: () => number,
 ): Array<[number, number]> {
-  const rng = mulberry32(seed);
   const poly: Array<[number, number]> = [];
   for (let i = 0; i < points; i++) {
     const t = (i / points) * Math.PI * 2;
@@ -41,9 +40,8 @@ function coastlinePoly(
   depthMin: number,
   depthMax: number,
   segments: number,
-  seed: number,
+  rng: () => number,
 ): Array<[number, number]> {
-  const rng = mulberry32(seed);
   const poly: Array<[number, number]> = [];
   const depths: number[] = [];
   for (let i = 0; i <= segments; i++) {
@@ -99,8 +97,8 @@ function bbox(poly: Array<[number, number]>) {
   return { minX, maxX, minY, maxY };
 }
 
-function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, seed: number, jitter = 0.35): Sandbank {
-  const poly = organicBlob(cx, cy, rx, ry, 18, jitter, seed);
+function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, rng: () => number, jitter = 0.35): Sandbank {
+  const poly = organicBlob(cx, cy, rx, ry, 18, jitter, rng);
   const bb = bbox(poly);
   return {
     x: cx,
@@ -112,8 +110,8 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
   };
 }
 
-function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, seed: number): Sandbank {
-  const poly = coastlinePoly(side, start, end, dMin, dMax, 14, seed);
+function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, rng: () => number): Sandbank {
+  const poly = coastlinePoly(side, start, end, dMin, dMax, 14, rng);
   const bb = bbox(poly);
   return {
     x: (bb.minX + bb.maxX) / 2,
@@ -125,38 +123,60 @@ function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number,
   };
 }
 
-export function createMap(seed: number) {
+const SANDBANK_NAMES = [
+  'Niendorf Riff', 'Timmendorf Untiefe', 'Poel Platte', 'Wismar Schlick', 
+  'Boltenhagen Bank', 'Schlutuper Sand', 'Travemünde Rinne', 'Priwall Untiefe',
+  'Fehmarn Belt Bank', 'Grömitzer Düne', 'Kellenhusen Riff'
+];
+
+export function createMap(seed: number): Sandbank[] {
   const rng = mulberry32(seed);
   const sandbanks: Sandbank[] = [];
 
-  // 1. Create the outer boundary
-  const wallThickness = 100;
-  const wallVariance = 45;
-  sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
-  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
-  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
-  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng() * 1e6));
+  // 1. Continuous coastline around the entire map (creating an invisible wall of sand)
+  const wallThickness = 70;
+  const wallVariance = 30;
+  
+  sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
 
   // 2. Generate random inner sandbanks
-  const numBanks = 4 + Math.floor(rng() * 3); // 4 to 6 banks
+  const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks
   const takenAreas: {x: number, y: number, rx: number, ry: number}[] = [];
+  
+  // Clone and shuffle names based on PRNG
+  const availableNames = [...SANDBANK_NAMES].sort(() => rng() - 0.5);
 
   for (let i = 0; i < numBanks; i++) {
-    let x, y, rx, ry;
+    let x = 0, y = 0, rx = 0, ry = 0;
     let attempts = 0;
     let overlaps = true;
 
-    while (overlaps && attempts < 20) {
-      rx = 100 + rng() * 60; // Random width
-      ry = 50 + rng() * 30;  // Random height
-      x = wallThickness + rx + rng() * (MAP_W - 2 * (wallThickness + rx));
-      y = wallThickness + ry + rng() * (MAP_H - 2 * (wallThickness + ry));
+    while (overlaps && attempts < 30) {
+      rx = 80 + rng() * 60; // Random width
+      ry = 40 + rng() * 40;  // Random height
+      // Keep away from the outer walls and the barge area
+      x = wallThickness + rx + 50 + rng() * (MAP_W - 2 * (wallThickness + rx + 50));
+      y = wallThickness + ry + 50 + rng() * (MAP_H - 2 * (wallThickness + ry + 50));
       
+      // Keep away from Barge area (bottom right)
+      if (x > MAP_W - 350 && y > MAP_H - 350) {
+        attempts++;
+        continue;
+      }
+      
+      // Keep away from Whale spawn (center left)
+      if (x < 300 && y > MAP_H/2 - 150 && y < MAP_H/2 + 150) {
+        attempts++;
+        continue;
+      }
+
       overlaps = false;
       for (const area of takenAreas) {
-        // Simple circle-based collision detection for placement
         const dist = Math.sqrt(Math.pow(x - area.x, 2) + Math.pow(y - area.y, 2));
-        if (dist < (rx + area.rx) * 1.2 || dist < (ry + area.ry) * 1.2) {
+        if (dist < (rx + area.rx) * 1.3 || dist < (ry + area.ry) * 1.3) {
           overlaps = true;
           break;
         }
@@ -165,7 +185,8 @@ export function createMap(seed: number) {
     }
 
     if (!overlaps) {
-      sandbanks.push(makeBank(x, y, rx, ry, `Bank-${i}`, rng() * 1e6));
+      const name = availableNames.pop() || '';
+      sandbanks.push(makeBank(x, y, rx, ry, name, rng, 0.3 + rng()*0.15));
       takenAreas.push({x, y, rx, ry});
     }
   }
@@ -202,7 +223,6 @@ function pointInPoly(x: number, y: number, poly: Array<[number, number]>): boole
 }
 
 export function pointInSandbank(x: number, y: number, sb: Sandbank): boolean {
-  // Quick bbox check first
   if (x < sb.x - sb.rx - 4 || x > sb.x + sb.rx + 4) return false;
   if (y < sb.y - sb.ry - 4 || y > sb.y + sb.ry + 4) return false;
   return pointInPoly(x, y, sb.poly);

@@ -31,7 +31,7 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
       >
         <path
           fill="#e5d06b"
-          fillOpacity="0.4"
+          fillOpacity="0.9"
           d="M0,192L60,197.3C120,203,240,213,360,208C480,203,600,181,720,170.7C840,160,960,160,1080,181.3C1200,203,1320,245,1380,266.7L1440,288L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"
         />
         <path
@@ -43,8 +43,8 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
       <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <WhaleLogo className="size-24 mr-4" />
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight">
+            <WhaleLogo className="size-24 mr-1 md:mr-4" />
+            <h1 className="text-4xl md:text-7xl font-black tracking-tight">
               Ab in die Barge!
             </h1>
           </div>
@@ -103,7 +103,7 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
           </div>
         </div>
 
-        <div className="text-center mt-12 mb-8 bg-white/70 backdrop-blur px-4 py-2 rounded-full border border-slate-200">
+        <div className="text-center mt-12 mb-8 bg-white/80 px-4 py-2 rounded-full border border-slate-200">
           <p className="text-xs text-slate-500 flex items-center justify-center gap-2">
             <Heart className="w-4 h-4 text-rose-400" />
             <span>Inspiriert von der echten Walrettung.</span>

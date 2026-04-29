@@ -7,6 +7,7 @@ import { EndScreen } from '../components/EndScreen';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { WhaleLogo } from '../components/WhaleLogo';
 import { Users, Copy, Check, LogOut } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 function randomCode() {
   const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -62,10 +63,13 @@ export function HostView({ onLeave }: HostViewProps) {
         <main className="flex-1 grid md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto mt-6">
           <div className="flex flex-col items-center justify-center bg-white border border-slate-200 rounded-xl p-8">
             <div className="text-sm uppercase tracking-widest text-slate-500 mb-3">Room Code</div>
-            <div className="text-8xl lg:text-9xl leading-none font-black tracking-widest text-slate-800 mb-4">
-              {code}
-            </div>
-            <button
+          <div className="text-8xl lg:text-9xl leading-none font-black tracking-widest text-slate-800 mb-4">
+            {code}
+          </div>
+          <div className="p-3 bg-white rounded-xl border border-slate-200">
+            <QRCodeSVG value={joinUrl} size={160} bgColor="#ffffff" fgColor="#1e3a8a" level="H" />
+          </div>
+          <button
               onClick={() => {
                 navigator.clipboard.writeText(joinUrl);
                 setCopied(true);

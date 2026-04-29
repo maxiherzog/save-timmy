@@ -38,6 +38,9 @@ export type Whale = {
   bargeTimer: number;
   strandTimer: number;
   healCooldown: number;
+  soundCooldown: number;
+  blowTimer: number;
+  lastIntHp: number;
 };
 
 export type Sandbank = {
@@ -88,10 +91,7 @@ export type VoteState = {
 export type GameState = {
   code: string;
   phase: 'lobby' | 'starting' | 'ready' | 'playing' | 'voting' | 'ended';
-  day: number;
-  dayProgress: number;
-  dayLength: number;
-  maxDays: number;
+  timeElapsed: number;
   players: Record<string, Player>;
   whale: Whale;
   sandbanks: Sandbank[];
@@ -100,14 +100,14 @@ export type GameState = {
   vote: VoteState;
   ended: null | {
     winner: 'rescuers' | 'imposter';
-    reason: 'barge' | 'whale_died' | 'imposter_voted' | 'timeout';
+    reason: 'barge' | 'whale_died' | 'imposter_voted';
     imposterId: string;
     imposterCharacter: CharacterId;
     imposterName: string;
   };
   bannerMessage: string;
   bannerUntil: number;
-  fx: Array<{ id: number; kind: 'hupen' | 'trampeln'; x: number; y: number; t: number }>;
+  fx: Array<{ id: number; kind: 'hupen' | 'trampeln' | 'crash' | 'blow' | 'damage' | 'heal'; x: number; y: number; t: number; value?: number }>;
   bargeDrift: {
     nextDriftAt: number;
     driftingUntil: number;
@@ -120,10 +120,8 @@ export const TRAMPELN_STAMINA_MAX = 100;
 export const TRAMPELN_COST = 22;
 export const TRAMPELN_REGEN = 10;
 
-export const MAP_W = 1600;
-export const MAP_H = 900;
-export const DAY_LENGTH = 70;
-export const MAX_DAYS = 5;
-export const WHALE_MAX_HP = 65;
+export const MAP_W = 1920;
+export const MAP_H = 1080;
+export const WHALE_MAX_HP = 100;
 export const BARGE_DRIFT_INTERVAL = 45;
 export const BARGE_DRIFT_DURATION = 6;

@@ -2,7 +2,7 @@ import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
 import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
-import { MAP_W, MAP_H, DAY_LENGTH, MAX_DAYS, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
+import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
 
 export function createInitialWhale(): Whale {
   return {
@@ -17,6 +17,8 @@ export function createInitialWhale(): Whale {
     strandTimer: 0,
     healCooldown: 0,
     soundCooldown: 5,
+    blowTimer: 8 + Math.random() * 8,
+    lastIntHp: WHALE_MAX_HP,
   };
 }
 
@@ -46,10 +48,7 @@ export function createInitialState(code: string): GameState {
   return {
     code,
     phase: 'lobby',
-    day: 1,
-    dayProgress: 0,
-    dayLength: DAY_LENGTH,
-    maxDays: MAX_DAYS,
+    timeElapsed: 0,
     players: {},
     whale: createInitialWhale(),
     sandbanks,
@@ -164,16 +163,32 @@ function updateWhale(state: GameState, dt: number) {
   const hpMul = w.hp < 10 ? 0 : w.hp < 30 ? 0.5 : 1;
   const baseSpeed = 28 * hpMul;
 
+  let hpDelta = 0;
   const shallow = anySandbank(state.sandbanks, w.x, w.y);
   if (shallow) {
-    w.state = 'stranded';
     w.strandTimer += dt;
-    const dmgPerSec = Math.max(0, Math.min(2.2, (w.strandTimer - 2) * 0.5));
-    w.hp -= dt * dmgPerSec;
+    const dmgPerSec = Math.max(0.5, Math.min(2.5, w.strandTimer * 0.5));
+    hpDelta -= dmgPerSec * dt;
   } else {
-    w.state = w.hp <= 0 ? 'dead' : w.hp < 15 ? 'dying' : 'swimming';
     w.strandTimer = 0;
+    if (pointInHealZone(w.x, w.y)) {
+      hpDelta += 2.0 * dt;
+    } else {
+      hpDelta -= (WHALE_MAX_HP / 300) * dt; // 100 HP over 300 seconds (5 mins)
+    }
   }
+
+  w.hp += hpDelta;
+  w.state = w.hp <= 0 ? 'dead' : w.hp < 15 ? 'dying' : shallow ? 'stranded' : 'swimming';
+
+  const currentIntHp = Math.floor(w.hp);
+  if (currentIntHp < w.lastIntHp && w.state !== 'dead') {
+    state.fx.push({ id: fxIdCounter++, kind: 'damage', value: currentIntHp - w.lastIntHp, x: w.x, y: w.y, t: performance.now() / 1000 });
+  } else if (currentIntHp > w.lastIntHp) {
+    state.fx.push({ id: fxIdCounter++, kind: 'heal', value: currentIntHp - w.lastIntHp, x: w.x, y: w.y, t: performance.now() / 1000 });
+  }
+  w.lastIntHp = currentIntHp;
+
 
   if (w.state === 'swimming' || w.state === 'dying') {
     w.heading += (w.wanderHeading - w.heading) * dt * 0.8;
@@ -186,13 +201,24 @@ function updateWhale(state: GameState, dt: number) {
   if (w.y < 60) { w.y = 60; w.wanderHeading = Math.PI / 2; }
   if (w.y > MAP_H - 60) { w.y = MAP_H - 60; w.wanderHeading = -Math.PI / 2; }
 
-  if (pointInHealZone(w.x, w.y)) {
-    w.healCooldown -= dt;
-    if (w.healCooldown <= 0) {
-      w.hp = Math.min(WHALE_MAX_HP, w.hp + 1.5 * dt * 3);
+  w.blowTimer -= dt;
+  if (w.blowTimer <= 0 && w.state !== 'dead' && w.state !== 'stranded') {
+    w.blowTimer = 8 + Math.random() * 6;
+    state.fx.push({ id: fxIdCounter++, kind: 'blow', x: w.x + Math.cos(w.heading) * 20, y: w.y + Math.sin(w.heading) * 20, t: performance.now() / 1000 });
+    for (const p of Object.values(state.players)) {
+      if (!p.boat.alive) continue;
+      const dx = p.boat.x - w.x;
+      const dy = p.boat.y - w.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 180) {
+        const force = (1 - dist / 180) * 400;
+        const pushDir = Math.atan2(dy, dx);
+        p.boat.vx += Math.cos(pushDir) * force;
+        p.boat.vy += Math.sin(pushDir) * force;
+      }
     }
   }
-
+  
   const b = state.barge;
   if (w.x >= b.x && w.x <= b.x + b.w && w.y >= b.y && w.y <= b.y + b.h) {
     w.bargeTimer += dt;
@@ -205,16 +231,31 @@ function updateWhale(state: GameState, dt: number) {
     const dx = w.x - p.boat.x;
     const dy = w.y - p.boat.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < WHALE_RADIUS + BOAT_RADIUS && p.boat.ramCooldown <= 0) {
-      const speedFactor = 0.5 + Math.min(1, p.boat.speed / BOAT_MAX_SPEED);
-      w.hp -= 5 * speedFactor;
-      p.boat.stats.rams += 1;
-      p.boat.ramCooldown = 1;
+    
+    if (dist < WHALE_RADIUS + BOAT_RADIUS) {
+      if (p.boat.ramCooldown <= 0) {
+        const speedFactor = 0.5 + Math.min(1, p.boat.speed / BOAT_MAX_SPEED);
+        w.hp -= 0.5 * speedFactor; // Reduced damage on collision
+        p.boat.stats.rams += 1;
+        p.boat.ramCooldown = 0.5;
+        playCrashSound(0.5);
+        state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (w.x + p.boat.x)/2, y: (w.y + p.boat.y)/2, t: performance.now() / 1000 });
+      }
+      
       if (dist > 0.01) {
-        w.x += (dx / dist) * 80 * dt;
-        w.y += (dy / dist) * 80 * dt;
+        const overlap = (WHALE_RADIUS + BOAT_RADIUS) - dist;
+        const nx = dx / dist;
+        const ny = dy / dist;
+        p.boat.x -= nx * overlap * 1.05;
+        p.boat.y -= ny * overlap * 1.05;
+        const dot = p.boat.vx * nx + p.boat.vy * ny;
+        if (dot > 0) {
+          p.boat.vx -= 2 * dot * nx * 0.6;
+          p.boat.vy -= 2 * dot * ny * 0.6;
+        }
       }
     }
+
     if (p.input.hupen && p.boat.hupenCooldown <= 0) {
       p.boat.hupenCooldown = 3;
       p.boat.stats.hupen += 1;
@@ -267,15 +308,7 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   const fxCutoff = now - 2;
   if (state.fx.length > 0) state.fx = state.fx.filter((f) => f.t > fxCutoff);
 
-  state.dayProgress += dt;
-  if (state.dayProgress >= state.dayLength) {
-    state.dayProgress = 0;
-    state.day += 1;
-    if (state.day > state.maxDays) {
-      endMatch(state, 'imposter', 'timeout');
-      return state;
-    }
-  }
+  state.timeElapsed += dt;
 
   const players = Object.values(state.players);
   for (const p of players) {

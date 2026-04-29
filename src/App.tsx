@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Landing } from './pages/Landing';
 import { HostView } from './pages/HostView';
 import { PlayerView } from './pages/PlayerView';
+import { TestView } from './pages/TestView';
 
 type View =
   | { kind: 'landing' }
   | { kind: 'host' }
-  | { kind: 'player'; code: string; name: string; playerId: string };
+  | { kind: 'player'; code: string; name: string; playerId: string }
+  | { kind: 'test' };
 
 function randomId() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -16,6 +18,7 @@ export default function App() {
   const [view, setView] = useState<View>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('host') === '1') return { kind: 'host' };
+    if (params.get('test') === '1') return { kind: 'test' };
     return { kind: 'landing' };
   });
 
@@ -42,11 +45,13 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.delete('host');
     url.searchParams.delete('join');
+    url.searchParams.delete('test');
     window.history.replaceState(null, '', url.toString());
     setPrefillCode('');
     setView({ kind: 'landing' });
   }
 
+  if (view.kind === 'test') return <TestView onLeave={goHome} />;
   if (view.kind === 'host') return <HostView onLeave={goHome} />;
 
   if (view.kind === 'player') {

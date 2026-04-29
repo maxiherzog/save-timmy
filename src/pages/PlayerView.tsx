@@ -230,6 +230,16 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     );
   }
 
+  // ROLE BANNER STATE
+  const [showRole, setShowRole] = useState(false);
+  useEffect(() => {
+    if (state?.phase === 'playing') {
+      setShowRole(true);
+      const timer = setTimeout(() => setShowRole(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [state?.phase]);
+
   // PLAYING
   const isImposter = role?.role === 'imposter';
   const pkUsed = me?.pressConferenceUsed;
@@ -257,15 +267,15 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
       </div>
 
       {/* Role banner */}
-      <div
-        className={`px-4 py-1.5 text-center text-sm font-bold ${
-          isImposter
-            ? 'bg-red-500 text-white'
-            : 'bg-green-500 text-white'
-        }`}
-      >
-        {isImposter ? '🤫 SABOTEUR' : '🐋 RETTER'}
-      </div>
+      {showRole && (
+        <div
+          className={`px-4 py-1.5 text-center text-sm font-bold ${
+            isImposter ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+          }`}
+        >
+          {isImposter ? '🤫 SABOTEUR' : '🐋 RETTER'}
+        </div>
+      )}
       
       {/* Controls */}
       <div className="flex-1 grid grid-cols-2 gap-3 p-4">

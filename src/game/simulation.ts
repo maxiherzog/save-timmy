@@ -1,6 +1,6 @@
 import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
-import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone } from './map';
+import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, HARBOR_ZONES } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
 
@@ -20,14 +20,12 @@ export function createInitialWhale(): Whale {
   };
 }
 
-export function createBoat(index: number, total: number): Boat {
-  const angle = (index / Math.max(total, 1)) * Math.PI * 2;
-  const cx = MAP_W / 2;
-  const cy = MAP_H / 2;
+export function createBoat(index: number, _total: number): Boat {
+  const spawnPos = HARBOR_ZONES[index % HARBOR_ZONES.length];
   return {
-    x: cx + Math.cos(angle) * 220,
-    y: cy + Math.sin(angle) * 140,
-    heading: angle + Math.PI,
+    x: spawnPos.x,
+    y: spawnPos.y,
+    heading: 0,
     vx: 0,
     vy: 0,
     speed: 0,
@@ -67,7 +65,7 @@ const BOAT_ACCEL = 260;
 const BOAT_MAX_SPEED = 170;
 const BOAT_MIN_SPEED = 20;
 const BOAT_FRICTION = 0.94;
-const BOAT_RADIUS = 22;
+const BOAT_RADIUS = 20;
 const WHALE_RADIUS = 34;
 
 function handleBargeCollision(entity: {x: number, y: number}, radius: number, state: GameState) {
@@ -256,6 +254,8 @@ function updateWhale(state: GameState, dt: number) {
         w.hp -= 5 * speedFactor;
         p.boat.stats.rams += 1;
         p.boat.ramCooldown = 1;
+        state.fx.push({ id: fxIdCounter++, kind: 'crash', x: p.boat.x, y: p.boat.y, t: performance.now() / 1000 });
+        playCrashSound(speedFactor);
       }
     }
     if (p.input.hupen && p.boat.hupenCooldown <= 0) {

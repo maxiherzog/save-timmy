@@ -173,6 +173,19 @@ export function createMap(seed: number): Sandbank[] {
         continue;
       }
 
+      // Keep away from Harbor zones
+      let nearHarbor = false;
+      for (const zone of HARBOR_ZONES) {
+        if (Math.sqrt(Math.pow(x - zone.x, 2) + Math.pow(y - zone.y, 2)) < (rx + ry) * 1.5) {
+          nearHarbor = true;
+          break;
+        }
+      }
+      if (nearHarbor) {
+        attempts++;
+        continue;
+      }
+
       overlaps = false;
       for (const area of takenAreas) {
         const dist = Math.sqrt(Math.pow(x - area.x, 2) + Math.pow(y - area.y, 2));
@@ -199,13 +212,20 @@ export const HEAL_ZONES: HealZone[] = [
   { x: 820, y: 720, w: 220, h: 40 },
 ];
 
+export const HARBOR_ZONES: {x: number, y: number}[] = [
+  { x: 100, y: 100 },
+  { x: 100, y: 200 },
+  { x: 100, y: 300 },
+  { x: 100, y: 400 },
+];
+
 export const BARGE: Barge = {
-  x: MAP_W - 260,
-  y: MAP_H - 260,
-  w: 200,
-  h: 170,
-  openingY: MAP_H - 180,
-  openingSize: 100,
+  x: MAP_W - 220,
+  y: MAP_H - 220,
+  w: 160,
+  h: 140,
+  openingY: MAP_H - 150,
+  openingSize: 80,
 };
 
 export const COAST_TOP = 90;

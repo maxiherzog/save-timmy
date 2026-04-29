@@ -1,36 +1,28 @@
+import { playCrashSound, playWhaleSound } from './audio';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, DAY_LENGTH, MAX_DAYS, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
-import { createMap, HEAL_ZONES, BARGE, COAST_TOP, COAST_BOTTOM, anySandbank, pointInHealZone } from './map';
+import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone } from './map';
+import type { CharacterId } from './characters';
 
-// ... (rest of the file remains the same until createInitialState)
-
-export function createInitialState(code: string): GameState {
-  const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const sandbanks = createMap(seed);
+export function createInitialWhale(): Whale {
   return {
-    code,
-    phase: 'lobby',
-    day: 1,
-    dayProgress: 0,
-    dayLength: DAY_LENGTH,
-    maxDays: MAX_DAYS,
-    players: {},
-    whale: createInitialWhale(),
-    sandbanks,
-    healZones: HEAL_ZONES,
-    barge: BARGE,
-    vote: { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} },
-    ended: null,
-    bannerMessage: '',
-    bannerUntil: 0,
-    fx: [],
-    bargeDrift: { nextDriftAt: 0, driftingUntil: 0, vx: 0, vy: 0 },
+    x: 180,
+    y: MAP_H / 2,
+    heading: Math.PI,
+    hp: WHALE_MAX_HP,
+    state: 'swimming',
+    wanderHeading: Math.PI,
+    wanderTimer: 3,
+    soundCooldown: 5,
+    bargeTimer: 0,
+    strandTimer: 0,
+    healCooldown: 0,
   };
 }
 
 // ... (rest of the file remains the same until updateBoat)
 
-function updateBoat(boat: Boat, input: PlayerInput, dt: number, state: GameState) {
+function updateBoat({ boat }: { boat: Boat }, input: PlayerInput, dt: number, state: GameState) {
   if (!boat.alive) return;
   const ix = Math.max(-1, Math.min(1, input.joystickX));
   const iy = Math.max(-1, Math.min(1, input.joystickY));
@@ -42,6 +34,64 @@ function updateBoat(boat: Boat, input: PlayerInput, dt: number, state: GameState
     boat.vy += ny * BOAT_ACCEL * dt;
     boat.heading = Math.atan2(ny, nx);
   }
+  boat.vx *= Math.pow(BOAT_FRICTION, dt * 60);
+  boat.vy *= Math.pow(BOAT_FRICTION, dt * 60);
+  const speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
+  if (speed > BOAT_MAX_SPEED) {
+    boat.vx = (boat.vx / speed) * BOAT_MAX_SPEED;
+    boat.vy = (boat.vy / speed) * BOAT_MAX_SPEED;
+  }
+
+  // Sandbank slowdown & collision
+  const onShallow = anySandbank(state.sandbanks, boat.x, boat.y);
+  if (onShallow && boat.ramCooldown <= 0 && speed > 80) {
+    boat.ramCooldown = 0.8;
+    state.fx.push({ id: fxIdCounter++, kind: 'crash', x: boat.x, y: boat.y, t: performance.now() / 1000 });
+    playCrashSound(speed / BOAT_MAX_SPEED);
+    boat.vx *= -0.4;
+    boat.vy *= -0.4;
+  }
+  const speedMul = onShallow ? 0.35 : 1;
+  if (onShallow) {
+    boat.vx *= Math.pow(0.82, dt * 60);
+    boat.vy *= Math.pow(0.82, dt * 60);
+  }
+
+  boat.x += boat.vx * dt * speedMul;
+  boat.y += boat.vy * dt * speedMul;
+  boat.speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy) * speedMul;
+
+  // Clamp to map
+  if (boat.x < 30) { boat.x = 30; boat.vx = 0; }
+  if (boat.x > MAP_W - 30) { boat.x = MAP_W - 30; boat.vx = 0; }
+  if (boat.y < 30) { boat.y = 30; boat.vy = 0; }
+  if (boat.y > MAP_H - 30) { boat.y = MAP_H - 30; boat.vy = 0; }
+
+
+  boat.hupenCooldown = Math.max(0, boat.hupenCooldown - dt);
+  boat.trampelnCooldown = Math.max(0, boat.trampelnCooldown - dt);
+  boat.ramCooldown = Math.max(0, boat.ramCooldown - dt);
+  boat.trampelnStamina = Math.min(TRAMPELN_STAMINA_MAX, boat.trampelnStamina + TRAMPELN_REGEN * dt);
+}
+//...
+function updateWhale(state: GameState, dt: number) {
+  const w = state.whale;
+  if (w.state === 'dead') return;
+
+  w.soundCooldown -= dt;
+  if (w.soundCooldown <= 0) {
+    w.soundCooldown = 8 + Math.random() * 10;
+    playWhaleSound(0.5 + w.hp / WHALE_MAX_HP * 0.5);
+  }
+
+  w.wanderTimer -= dt;
+  if (w.wanderTimer <= 0) {
+    w.wanderTimer = 3 + Math.random() * 2;
+    w.wanderHeading += (Math.random() - 0.5) * 0.5;
+  }
+  
+  // ... rest of the function
+}
   boat.vx *= Math.pow(BOAT_FRICTION, dt * 60);
   boat.vy *= Math.pow(BOAT_FRICTION, dt * 60);
   const speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
@@ -424,10 +474,70 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   if (state.phase === 'ended' || state.phase === 'lobby' || state.phase === 'starting' || state.phase === 'ready') return state;
 
   if (state.phase === 'voting') {
-    // Vote ends?
     if (now >= state.vote.endsAt) {
       resolveVote(state);
     }
+    return state;
+  }
+
+  const fxCutoff = performance.now() / 1000 - 2;
+  if (state.fx.length > 0) state.fx = state.fx.filter((f) => f.t > fxCutoff);
+
+  state.dayProgress += dt;
+  if (state.dayProgress >= state.dayLength) {
+    state.dayProgress = 0;
+    state.day += 1;
+    if (state.day > state.maxDays) {
+      endMatch(state, 'imposter', 'timeout');
+      return state;
+    }
+  }
+
+  const players = Object.values(state.players);
+  for (const p of players) {
+    if (p.connected) updateBoat(p, p.input, dt, state);
+  }
+
+  // Boat-boat collisions
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      const p1 = players[i];
+      const p2 = players[j];
+      if (!p1.boat.alive || !p2.boat.alive || p1.boat.ramCooldown > 0.5 || p2.boat.ramCooldown > 0.5) continue;
+      
+      const dx = p1.boat.x - p2.boat.x;
+      const dy = p1.boat.y - p2.boat.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < BOAT_RADIUS * 2) {
+        playCrashSound(1);
+        state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (p1.boat.x + p2.boat.x) / 2, y: (p1.boat.y + p2.boat.y) / 2, t: now });
+        p1.boat.ramCooldown = 1;
+        p2.boat.ramCooldown = 1;
+        const speed1 = Math.sqrt(p1.boat.vx ** 2 + p1.boat.vy ** 2);
+        const speed2 = Math.sqrt(p2.boat.vx ** 2 + p2.boat.vy ** 2);
+        if (speed1 > 30) { p2.boat.vx += p1.boat.vx * 0.4; p2.boat.vy += p1.boat.vy * 0.4; }
+        if (speed2 > 30) { p1.boat.vx += p2.boat.vx * 0.4; p1.boat.vy += p2.boat.vy * 0.4; }
+      }
+    }
+  }
+
+  updateWhale(state, dt);
+  updateBargeDrift(state, dt, now);
+
+  if (state.whale.hp <= 0 && state.whale.state !== 'dead') {
+    state.whale.state = 'dead';
+    endMatch(state, 'imposter', 'whale_died');
+    return state;
+  }
+
+  if (state.whale.bargeTimer >= 3) {
+    endMatch(state, 'rescuers', 'barge');
+    return state;
+  }
+
+  return state;
+}
     return state;
   }
 

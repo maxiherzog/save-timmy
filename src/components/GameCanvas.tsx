@@ -357,16 +357,31 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
 }
 
 function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
-  for (const p of Object.values(state.players)) {
-    if (p.boat.hupenCooldown > 2.7) {
+  const now = performance.now() / 1000;
+  for (const fx of state.fx) {
+    const age = now - fx.t;
+    if (fx.kind === 'hupen') {
       ctx.save();
-      ctx.translate(p.boat.x, p.boat.y);
-      ctx.globalAlpha = (p.boat.hupenCooldown - 2.7) / 0.3;
+      ctx.globalAlpha = Math.max(0, 1 - age / 0.3);
       ctx.strokeStyle = '#f87171';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(0, 0, 230 * (1 - (p.boat.hupenCooldown - 2.7) / 0.3), 0, Math.PI * 2);
+      ctx.arc(fx.x, fx.y, 230 * (age / 0.3), 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
+    } else if (fx.kind === 'crash') {
+      ctx.save();
+      for (let i = 0; i < 5; i++) {
+        const life = Math.max(0, 1 - age / (0.4 + i*0.05));
+        ctx.fillStyle = i % 2 === 0 ? '#ffab40' : '#ffe8c8';
+        ctx.globalAlpha = life * 0.8;
+        ctx.beginPath();
+        const angle = fx.id * 1.2 + i * 1.3;
+        const dist = 20 + i * 4 + (1-life) * 30;
+        const size = 3 + (1-life) * 8;
+        ctx.arc(fx.x + Math.cos(angle) * dist, fx.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
   }

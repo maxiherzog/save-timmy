@@ -14,7 +14,7 @@ import {
 
 const BROADCAST_HZ = 15;
 
-export function useHost(code: string, hostToken: string, imposterCount: number = 1) {
+export function useHost(code: string, hostToken: string, imposterCount: number = 1, testMode: boolean = false) {
   const [state, setState] = useState<GameState | null>(null);
   const stateRef = useRef<GameState | null>(null);
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
@@ -22,7 +22,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
 
   useEffect(() => {
     if (!code) return;
-    const init = createInitialState(code);
+    const init = createInitialState(code, imposterCount);
     stateRef.current = init;
     setState({ ...init });
 
@@ -30,6 +30,10 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
       onEvent: (e) => handleEvent(e),
     });
     chRef.current = ch;
+
+    if (testMode) {
+      handleEvent({ type: 'join', playerId: 'dummy-1', name: 'Dummy' });
+    }
 
     async function ensureRoom() {
       await supabase

@@ -5,7 +5,7 @@ import { PlayerView } from './pages/PlayerView';
 
 type View =
   | { kind: 'landing' }
-  | { kind: 'host' }
+  | { kind: 'host'; testMode?: boolean }
   | { kind: 'player'; code: string; name: string; playerId: string };
 
 function randomId() {
@@ -16,6 +16,7 @@ export default function App() {
   const [view, setView] = useState<View>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('host') === '1') return { kind: 'host' };
+    if (params.get('test') === '1') return { kind: 'host', testMode: true };
     return { kind: 'landing' };
   });
 
@@ -47,7 +48,7 @@ export default function App() {
     setView({ kind: 'landing' });
   }
 
-  if (view.kind === 'host') return <HostView onLeave={goHome} />;
+  if (view.kind === 'host') return <HostView onLeave={goHome} testMode={view.testMode} />;
 
   if (view.kind === 'player') {
     return <PlayerView code={view.code} name={view.name} playerId={view.playerId} onLeave={goHome} />;

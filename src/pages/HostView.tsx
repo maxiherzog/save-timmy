@@ -20,14 +20,14 @@ function randomToken() {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
-type HostViewProps = { onLeave: () => void };
+type HostViewProps = { onLeave: () => void; testMode?: boolean };
 
-export function HostView({ onLeave }: HostViewProps) {
+export function HostView({ onLeave, testMode }: HostViewProps) {
   const [code] = useState(() => randomCode());
   const [token] = useState(() => randomToken());
   const [imposterCount, setImposterCount] = useState<number>(1);
   const [copied, setCopied] = useState(false);
-  const { state, startMatch, rematch } = useHost(code, token, imposterCount);
+  const { state, startMatch, rematch } = useHost(code, token, imposterCount, testMode);
 
 
   const joinUrl = useMemo(() => {

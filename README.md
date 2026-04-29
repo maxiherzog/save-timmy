@@ -1,4 +1,4 @@
-# Save Timmy 🐋
+# Ab in die Barge! 🐋
 
 Ein lokales Multiplayer-Partyspiel im ".io"-Stil, bei dem Spieler gemeinsam einen gestrandeten Wal (Timmy) in Sicherheit navigieren müssen – doch einer unter ihnen ist der Saboteur!
 

@@ -19,7 +19,6 @@ const REASON_TEXT: Record<string, string> = {
 export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
   if (!state.ended) return null;
   const e = state.ended;
-  const imp = characterById(e.imposterCharacter);
   const isRescuersWin = e.winner === 'rescuers';
 
   const stats = Object.values(state.players).map((p) => ({
@@ -29,7 +28,7 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
     trampeln: p.boat.stats.trampeln,
     rams: p.boat.stats.rams,
     healTime: p.boat.stats.healTime,
-    isImposter: p.id === e.imposterId,
+    isImposter: e.imposterIds.includes(p.id),
   }));
 
   return (
@@ -46,28 +45,37 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
               isRescuersWin ? 'text-emerald-400' : 'text-rose-400'
             }`}
           >
-            {isRescuersWin ? 'RETTER GEWINNEN' : 'IMPOSTER GEWINNT'}
+            {isRescuersWin ? 'RETTER GEWINNEN' : (e.imposterIds.length > 1 ? 'SABOTEURE GEWINNEN' : 'SABOTEUR GEWINNT')}
           </h1>
         </div>
         <p className="text-center text-xl text-slate-300 mb-10">{REASON_TEXT[e.reason]}</p>
 
         <div className="bg-slate-900/80 border-2 border-amber-500/40 rounded-2xl p-8 mb-8">
-          <div className="text-center text-slate-400 text-sm uppercase tracking-widest mb-3">
-            Der Saboteur war...
+          <div className="text-center text-slate-400 text-sm uppercase tracking-widest mb-6">
+            {e.imposterIds.length > 1 ? 'Die Saboteure waren...' : 'Der Saboteur war...'}
           </div>
-          <div className="flex items-center justify-center gap-5 mb-4">
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center font-black text-3xl border-4"
-              style={{ background: imp.color, borderColor: imp.accent, color: '#fff' }}
-            >
-              {imp.initials}
-            </div>
-            <div className="text-left">
-              <div className="text-4xl font-black text-white">{imp.name}</div>
-              <div className="text-lg text-slate-400">gespielt von {e.imposterName}</div>
-            </div>
+          <div className="flex flex-wrap justify-center gap-8 mb-4">
+            {e.imposterCharacters.map((charId, idx) => {
+              const imp = characterById(charId);
+              return (
+                <div key={charId} className="flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-5">
+                    <div
+                      className="w-24 h-24 rounded-full flex items-center justify-center font-black text-3xl border-4"
+                      style={{ background: imp.color, borderColor: imp.accent, color: '#fff' }}
+                    >
+                      {imp.initials}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-4xl font-black text-white">{imp.name}</div>
+                      <div className="text-lg text-slate-400">gespielt von {e.imposterNames[idx]}</div>
+                    </div>
+                  </div>
+                  <div className="italic text-center text-slate-300 max-w-sm">&ldquo;{imp.quote}&rdquo;</div>
+                </div>
+              );
+            })}
           </div>
-          <div className="italic text-center text-slate-300 text-lg">&ldquo;{imp.quote}&rdquo;</div>
         </div>
 
         <div className="bg-slate-900/60 rounded-xl p-6 mb-8">

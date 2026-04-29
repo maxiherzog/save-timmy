@@ -53,11 +53,18 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
 
   if (!state) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center p-4">
-        <div>
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <div className="mb-8">
           <Waves className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-pulse" />
-          <div className="font-semibold">Verbinde mit Raum {code}...</div>
+          <div className="font-semibold text-xl mb-2">Verbinde mit Raum {code}...</div>
+          <div className="text-slate-500 text-sm">Bitte warten, oder kehre zurück, falls der Raum nicht mehr existiert.</div>
         </div>
+        <button
+          onClick={onLeave}
+          className="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-3 rounded-full transition"
+        >
+          <LogOut className="w-4 h-4" /> Startseite
+        </button>
       </div>
     );
   }
@@ -214,8 +221,11 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
           {iWon ? 'SIEG!' : 'NIEDERLAGE'}
         </div>
         <div className="text-slate-600 max-w-sm mb-8">
-          Der Saboteur war <span className="font-bold text-slate-800">{characterById(e.imposterCharacter).name}</span>
-          {' '}(<span className="font-bold">{e.imposterName}</span>).
+          {e.imposterIds.length > 1 ? 'Die Saboteure waren ' : 'Der Saboteur war '}
+          <span className="font-bold text-slate-800">
+            {e.imposterCharacters.map(c => characterById(c).name).join(', ')}
+          </span>
+          {' '}(<span className="font-bold">{e.imposterNames.join(', ')}</span>).
         </div>
         <div className="text-sm text-slate-500">
           Warte, bis der Host eine neue Runde startet.

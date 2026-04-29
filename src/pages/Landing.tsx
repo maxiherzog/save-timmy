@@ -54,21 +54,23 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
         </div>
 
         <div className="w-full max-w-md space-y-6">
-          <div className="bg-white border-2 border-slate-300 rounded-3xl p-6">
-            <div className="flex items-center gap-3 mb-3">
-              <Monitor className="w-6 h-6 text-slate-700" />
-              <h2 className="text-2xl font-bold text-slate-800">Spielfeld hosten</h2>
+          {!prefillCode && (
+            <div className="bg-white border-2 border-slate-300 rounded-3xl p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Monitor className="w-6 h-6 text-slate-700" />
+                <h2 className="text-2xl font-bold text-slate-800">Spielfeld hosten</h2>
+              </div>
+              <p className="text-slate-500 text-base mb-5">
+                Öffne das Spiel auf einem großen Bildschirm (Laptop oder TV).
+              </p>
+              <button
+                onClick={onHost}
+                className="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-3 rounded-full transition border-2 border-slate-400 shadow-sm"
+              >
+                Spiel hosten
+              </button>
             </div>
-            <p className="text-slate-500 text-base mb-5">
-              Öffne das Spiel auf einem großen Bildschirm (Laptop oder TV).
-            </p>
-            <button
-              onClick={onHost}
-              className="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-3 rounded-full transition border-2 border-slate-400 shadow-sm"
-            >
-              Spiel hosten
-            </button>
-          </div>
+          )}
 
           <div className="bg-white border-2 border-slate-300 rounded-3xl p-6">
             <div className="flex items-center gap-3 mb-3">
@@ -76,14 +78,21 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
               <h2 className="text-2xl font-bold text-slate-800">Spiel beitreten</h2>
             </div>
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="ROOM-CODE"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                maxLength={4}
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-400 rounded-xl text-xl tracking-[0.3em] text-center uppercase placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/40 transition"
-              />
+              {!prefillCode ? (
+                <input
+                  type="text"
+                  placeholder="ROOM-CODE"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  maxLength={4}
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-400 rounded-xl text-xl tracking-[0.3em] text-center uppercase placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/40 transition"
+                />
+              ) : (
+                <div className="text-center py-2 bg-slate-100 rounded-xl border-2 border-slate-300 mb-4">
+                  <div className="text-sm text-slate-500 uppercase tracking-widest font-bold">Raum</div>
+                  <div className="text-3xl font-black tracking-[0.3em] text-slate-800">{normalizedCode}</div>
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Dein Name"
@@ -99,6 +108,19 @@ export function Landing({ onHost, onJoin, prefillCode }: Props) {
               >
                 Beitreten
               </button>
+              {prefillCode && (
+                <button
+                  onClick={() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('join');
+                    window.history.replaceState(null, '', url.toString());
+                    window.location.reload();
+                  }}
+                  className="w-full mt-2 text-slate-500 hover:text-slate-800 font-bold py-2 transition"
+                >
+                  Zurück zur Startseite
+                </button>
+              )}
             </div>
           </div>
         </div>

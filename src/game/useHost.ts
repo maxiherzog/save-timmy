@@ -14,7 +14,7 @@ import {
 
 const BROADCAST_HZ = 15;
 
-export function useHost(code: string, hostToken: string, initialImposterCount: number = 1) {
+export function useHost(code: string, hostToken: string, imposterCount: number = 1) {
   const [state, setState] = useState<GameState | null>(null);
   const stateRef = useRef<GameState | null>(null);
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
@@ -138,10 +138,11 @@ export function useHost(code: string, hostToken: string, initialImposterCount: n
 
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     const imposters = shuffledPlayers.slice(0, imposterCount);
+    const shuffledCharacters = [...CHARACTERS].sort(() => Math.random() - 0.5);
     const assignments: { playerId: string; characterId: CharacterId }[] = [];
 
     players.forEach((p, i) => {
-      p.characterId = shuffled[i % shuffled.length].id;
+      p.characterId = shuffledCharacters[i % shuffledCharacters.length].id;
       p.boat = createBoat(i, players.length);
       p.pressConferenceUsed = false;
       assignments.push({ playerId: p.id, characterId: p.characterId });
@@ -213,8 +214,8 @@ export function useHost(code: string, hostToken: string, initialImposterCount: n
         room_code: code,
         winner: ended.winner,
         reason: ended.reason,
-        imposter_character: ended.imposterCharacter,
-        imposter_name: ended.imposterName,
+        imposter_characters: ended.imposterCharacters,
+        imposter_names: ended.imposterNames,
         duration_days: state.day,
         whale_hp_final: Math.round(state.whale.hp),
         stats: statsObj,
@@ -223,7 +224,7 @@ export function useHost(code: string, hostToken: string, initialImposterCount: n
         .from('rooms')
         .update({
           state: 'ended',
-          imposter_character: ended.imposterCharacter,
+          imposter_characters: ended.imposterCharacters,
           ended_at: new Date().toISOString(),
         })
         .eq('code', code);

@@ -50,6 +50,7 @@ export function createInitialState(code: string, impostersCount: number = 1): Ga
     dayProgress: 0,
     dayLength: DAY_LENGTH,
     maxDays: MAX_DAYS,
+    impostersCount,
     players: {},
     whale: createInitialWhale(),
     sandbanks,
@@ -318,13 +319,18 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
 
 export function endMatch(state: GameState, winner: 'rescuers' | 'imposter', reason: any) {
   if (state.ended) return;
-  const imposterId = (state as any)._imposterId as string | undefined;
-  let imposterCharacter: CharacterId = 'hilse', imposterName = '';
-  if (imposterId && state.players[imposterId]) {
-    imposterCharacter = state.players[imposterId].characterId;
-    imposterName = state.players[imposterId].name;
+  const imposterIds = (state as any)._imposterIds as string[] | undefined || [];
+  const imposterCharacters: CharacterId[] = [];
+  const imposterNames: string[] = [];
+  
+  for (const id of imposterIds) {
+    if (state.players[id]) {
+      imposterCharacters.push(state.players[id].characterId);
+      imposterNames.push(state.players[id].name);
+    }
   }
-  state.ended = { winner, reason, imposterId: imposterId ?? '', imposterCharacter, imposterName };
+
+  state.ended = { winner, reason, imposterIds, imposterCharacters, imposterNames };
   state.phase = 'ended';
 }
 
@@ -355,8 +361,8 @@ export function resolveVote(state: GameState) {
     if (count > topCount) { topCount = count; ejected = tgt; }
   }
   if (ejected && ejected !== 'skip' && topCount >= threshold) {
-    const imposterId = (state as any)._imposterId as string | undefined;
-    if (ejected === imposterId) {
+    const imposterIds = (state as any)._imposterIds as string[] | undefined || [];
+    if (imposterIds.includes(ejected)) {
       endMatch(state, 'rescuers', 'imposter_voted');
     } else if (state.players[ejected]) {
       state.players[ejected].boat.alive = false;

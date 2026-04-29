@@ -48,7 +48,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
           <div className="flex items-center gap-3">
             <WhaleLogo className="w-8 h-8 text-primary" />
             <div>
-              <div className="text-xs uppercase tracking-widest text-slate-500">Save Timmy</div>
+              <div className="text-xs uppercase tracking-widest text-slate-500">Ab in die Barge!</div>
               <div className="text-lg font-bold">Lobby</div>
             </div>
           </div>

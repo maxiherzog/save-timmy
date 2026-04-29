@@ -133,7 +133,7 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
           )}
         </div>
         <p className="text-center text-slate-500 text-sm mt-8">
-          Save Timmy ist ein satirisches Spiel. Wir wünschen dem echten Timmy alles Gute.
+          Ab in die Barge! ist ein satirisches Spiel. Wir wünschen dem echten Wal alles Gute.
         </p>
       </div>
     </div>

@@ -358,7 +358,7 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
 
 function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
   const now = performance.now() / 1000;
-  for (const fx of state.fx) {
+  for (const fx of state.fx as any[]) {
     const age = now - fx.t;
     if (fx.kind === 'hupen') {
       ctx.save();

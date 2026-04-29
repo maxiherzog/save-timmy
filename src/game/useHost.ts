@@ -14,7 +14,7 @@ import {
 
 const BROADCAST_HZ = 15;
 
-export function useHost(code: string, hostToken: string) {
+export function useHost(code: string, hostToken: string, initialImposterCount: number = 1) {
   const [state, setState] = useState<GameState | null>(null);
   const stateRef = useRef<GameState | null>(null);
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
@@ -116,7 +116,7 @@ export function useHost(code: string, hostToken: string) {
     } else if (e.type === 'vote') {
       castVote(s, e.playerId, e.targetId);
     } else if (e.type === 'start' && e.token === hostToken) {
-      if (s.phase === 'lobby') startMatch();
+      if (s.phase === 'lobby') startMatch(imposterCount);
     } else if (e.type === 'rematch' && e.token === hostToken) {
       resetToLobby();
     } else if (e.type === 'ready') {
@@ -130,14 +130,16 @@ export function useHost(code: string, hostToken: string) {
     }
   }
 
-  async function startMatch() {
+  async function startMatch(imposterCount: number) {
     const s = stateRef.current;
     if (!s) return;
     const players = Object.values(s.players).filter((p) => p.connected);
     if (players.length < 2) return; // min 2 for testing; spec says 4 but allow flexibility
 
-    const shuffled = [...CHARACTERS].sort(() => Math.random() - 0.5);
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+    const imposters = shuffledPlayers.slice(0, imposterCount);
     const assignments: { playerId: string; characterId: CharacterId }[] = [];
+
     players.forEach((p, i) => {
       p.characterId = shuffled[i % shuffled.length].id;
       p.boat = createBoat(i, players.length);
@@ -145,14 +147,13 @@ export function useHost(code: string, hostToken: string) {
       assignments.push({ playerId: p.id, characterId: p.characterId });
     });
 
-    const imposterIdx = Math.floor(Math.random() * players.length);
-    const imposter = players[imposterIdx];
-    (s as any)._imposterId = imposter.id;
+    const imposterIds = imposters.map(imp => imp.id);
+    (s as any)._imposterIds = imposterIds;
 
     if (chRef.current) await sendAssignments(chRef.current, assignments);
 
     for (const p of players) {
-      const role = p.id === imposter.id ? 'imposter' : 'rescuer';
+      const role = imposterIds.includes(p.id) ? 'imposter' : 'rescuer';
       sendRole(s.code, p.id, { type: 'role', role, character: p.characterId }).catch(() => {});
     }
 

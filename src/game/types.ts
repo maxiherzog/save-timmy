@@ -93,6 +93,7 @@ export type GameState = {
   dayProgress: number;
   dayLength: number;
   maxDays: number;
+  impostersCount: number;
   players: Record<string, Player>;
   whale: Whale;
   sandbanks: Sandbank[];
@@ -102,9 +103,9 @@ export type GameState = {
   ended: null | {
     winner: 'rescuers' | 'imposter';
     reason: 'barge' | 'whale_died' | 'imposter_voted' | 'timeout';
-    imposterId: string;
-    imposterCharacter: CharacterId;
-    imposterName: string;
+    imposterIds: string[];
+    imposterCharacters: CharacterId[];
+    imposterNames: string[];
   };
   bannerMessage: string;
   bannerUntil: number;

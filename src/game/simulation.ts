@@ -40,7 +40,7 @@ export function createBoat(index: number, total: number): Boat {
   };
 }
 
-export function createInitialState(code: string): GameState {
+export function createInitialState(code: string, impostersCount: number = 1): GameState {
   const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const sandbanks = createMap(seed);
   return {
@@ -169,7 +169,7 @@ function updateWhale(state: GameState, dt: number) {
   if (shallow) {
     w.state = 'stranded';
     w.strandTimer += dt;
-    const dmgPerSec = Math.max(0, Math.min(2.2, (w.strandTimer - 2) * 0.5));
+    const dmgPerSec = Math.max(0, Math.min(1.6, (w.strandTimer - 2) * 0.5));
     w.hp -= dt * dmgPerSec;
   } else {
     w.state = w.hp <= 0 ? 'dead' : w.hp < 15 ? 'dying' : 'swimming';
@@ -310,7 +310,7 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   if (state.whale.hp <= 0 && state.whale.state !== 'dead') {
     state.whale.state = 'dead';
     endMatch(state, 'imposter', 'whale_died');
-  } else if (state.whale.bargeTimer >= 3) {
+  } else if (state.whale.bargeTimer >= 3 && state.whale.hp > 0 && state.whale.state !== 'dead') {
     endMatch(state, 'rescuers', 'barge');
   }
   return state;

@@ -2,7 +2,7 @@ import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
 import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
-import { MAP_W, MAP_H, DAY_LENGTH, MAX_DAYS, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
+import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION } from './types';
 
 export function createInitialWhale(): Whale {
   return {
@@ -46,10 +46,6 @@ export function createInitialState(code: string, impostersCount: number = 1): Ga
   return {
     code,
     phase: 'lobby',
-    day: 1,
-    dayProgress: 0,
-    dayLength: DAY_LENGTH,
-    maxDays: MAX_DAYS,
     impostersCount,
     players: {},
     whale: createInitialWhale(),
@@ -273,16 +269,6 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   const fxCutoff = now - 2;
   if (state.fx.length > 0) state.fx = state.fx.filter((f) => f.t > fxCutoff);
 
-  state.dayProgress += dt;
-  if (state.dayProgress >= state.dayLength) {
-    state.dayProgress = 0;
-    state.day += 1;
-    if (state.day > state.maxDays) {
-      endMatch(state, 'imposter', 'timeout');
-      return state;
-    }
-  }
-
   const players = Object.values(state.players);
   for (const p of players) {
     if (p.connected) updateBoat(p, p.input, dt, state);
@@ -370,7 +356,7 @@ export function resolveVote(state: GameState) {
       state.bannerUntil = performance.now() / 1000 + 4;
     }
   } else {
-    state.bannerMessage = 'Keine Mehrheit. Wir haben Tag und Nacht gearbeitet.';
+    state.bannerMessage = 'Keine Mehrheit.';
     state.bannerUntil = performance.now() / 1000 + 4;
   }
   state.vote = { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} };

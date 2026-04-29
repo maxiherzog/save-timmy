@@ -174,8 +174,6 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     const allReady = connected.every((p) => p.ready);
     if (allReady) {
       s.phase = 'playing';
-      s.day = 1;
-      s.dayProgress = 0;
       supabase.from('rooms').update({ state: 'playing' }).eq('code', code);
     }
   }
@@ -216,7 +214,6 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         reason: ended.reason,
         imposter_characters: ended.imposterCharacters,
         imposter_names: ended.imposterNames,
-        duration_days: state.day,
         whale_hp_final: Math.round(state.whale.hp),
         stats: statsObj,
       });

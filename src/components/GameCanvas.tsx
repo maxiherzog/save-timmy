@@ -54,10 +54,7 @@ export function GameCanvas({ state }: Props) {
       ctx.translate(ox, oy);
       ctx.scale(scale, scale);
 
-      const tProg = s.dayProgress / s.dayLength;
-      const dayHue = tProg < 0.7 ? 195 : 220;
-      const dayLight = tProg < 0.6 ? 35 : tProg < 0.85 ? 22 : 14;
-      ctx.fillStyle = `hsl(${dayHue}, 55%, ${dayLight}%)`;
+      ctx.fillStyle = '#075985';
       ctx.fillRect(0, 0, MAP_W, MAP_H);
 
       // wave bands
@@ -370,8 +367,6 @@ function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
 
 function HUD({ state }: { state: GameState }) {
   const hpPct = (state.whale.hp / WHALE_MAX_HP) * 100;
-  const dayLeft = Math.max(0, state.dayLength - state.dayProgress);
-  const isNight = state.dayProgress / state.dayLength > 0.7;
   return (
     <>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
@@ -387,15 +382,6 @@ function HUD({ state }: { state: GameState }) {
           <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white font-['Comic_Neue']">
             {Math.round(state.whale.hp)} / {WHALE_MAX_HP}
           </div>
-        </div>
-      </div>
-      <div className="absolute top-4 right-4 bg-black/60 rounded-lg px-4 py-3 text-white pointer-events-none">
-        <div className="text-xs uppercase tracking-wider text-white/60">Tag</div>
-        <div className="text-2xl font-black font-['Comic_Neue']">
-          {state.day} / {state.maxDays}
-        </div>
-        <div className="text-xs text-white/70">
-          {isNight ? 'Nacht' : 'Tag'} · noch {Math.ceil(dayLeft)}s
         </div>
       </div>
     </>

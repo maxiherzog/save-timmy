@@ -79,7 +79,7 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
         </div>
 
         <div className="bg-slate-900/60 rounded-xl p-6 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Spielstatistik · Tag {state.day}</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Spielstatistik</h2>
           <div className="grid grid-cols-5 gap-2 text-slate-400 text-xs uppercase tracking-wider mb-2 px-3">
             <div>Spieler</div>
             <div className="text-center">Hupen</div>

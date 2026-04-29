@@ -89,10 +89,6 @@ export type VoteState = {
 export type GameState = {
   code: string;
   phase: 'lobby' | 'starting' | 'ready' | 'playing' | 'voting' | 'ended';
-  day: number;
-  dayProgress: number;
-  dayLength: number;
-  maxDays: number;
   impostersCount: number;
   players: Record<string, Player>;
   whale: Whale;
@@ -102,7 +98,7 @@ export type GameState = {
   vote: VoteState;
   ended: null | {
     winner: 'rescuers' | 'imposter';
-    reason: 'barge' | 'whale_died' | 'imposter_voted' | 'timeout';
+    reason: 'barge' | 'whale_died' | 'imposter_voted';
     imposterIds: string[];
     imposterCharacters: CharacterId[];
     imposterNames: string[];
@@ -124,8 +120,6 @@ export const TRAMPELN_REGEN = 10;
 
 export const MAP_W = 1600;
 export const MAP_H = 900;
-export const DAY_LENGTH = 70;
-export const MAX_DAYS = 5;
 export const WHALE_MAX_HP = 65;
 export const BARGE_DRIFT_INTERVAL = 45;
 export const BARGE_DRIFT_DURATION = 6;

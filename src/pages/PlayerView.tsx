@@ -264,12 +264,6 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
           </div>
           <div className="text-xs opacity-90 truncate text-white/80">{c.name}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs uppercase tracking-widest opacity-80 text-white">Tag {state.day}/{state.maxDays}</div>
-          <div className="w-24 h-2 bg-white/30 rounded-full mt-1 overflow-hidden">
-            <div className="h-full bg-white" style={{ width: `${(1 - state.dayProgress / state.dayLength) * 100}%` }} />
-          </div>
-        </div>
       </div>
 
       {/* Role banner */}

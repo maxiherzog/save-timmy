@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { usePlayer } from '../game/usePlayer';
 import { Joystick } from '../controller/Joystick';
 import { characterById } from '../game/characters';
-import { Siren, Volume2, Mic, Waves, AlertTriangle, Heart, LogOut } from 'lucide-react';
+import { Siren, Volume2, Mic, Waves, AlertTriangle, Heart, LogOut, Wifi } from 'lucide-react';
 
 type Props = {
   code: string;
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function PlayerView({ code, name, playerId, onLeave }: Props) {
-  const { state, role, assignments, setInput, pressConference, vote, ready } = usePlayer(code, playerId, name);
+  const { state, role, assignments, ping, setInput, pressConference, vote, ready } = usePlayer(code, playerId, name);
   const [hupenFlash, setHupenFlash] = useState(false);
   const [trampelnFlash, setTrampelnFlash] = useState(false);
   const [voted, setVoted] = useState<string | null>(null);
@@ -245,7 +245,13 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
         style={{ backgroundColor: c.color, borderColor: c.accent }}
       >
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-lg truncate text-white">{name}</div>
+          <div className="flex items-center gap-2">
+            <div className="font-bold text-lg truncate text-white">{name}</div>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/20 text-[10px] text-white font-mono" title="Ping">
+              <Wifi className={`w-2.5 h-2.5 ${ping === 0 ? 'opacity-50' : ping < 150 ? 'text-green-400' : ping < 400 ? 'text-yellow-400' : 'text-red-400'}`} />
+              {ping > 0 ? `${Math.round(ping)}ms` : '--'}
+            </div>
+          </div>
           <div className="text-xs opacity-90 truncate text-white/80">{c.name}</div>
         </div>
         <div className="text-right">

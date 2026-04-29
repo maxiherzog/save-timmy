@@ -16,7 +16,9 @@ export type NetEvent =
   | { type: 'vote'; playerId: string; targetId: string }
   | { type: 'request-state'; playerId: string }
   | { type: 'rematch'; token: string }
-  | { type: 'ready'; playerId: string };
+  | { type: 'ready'; playerId: string }
+  | { type: 'ping'; playerId: string; t: number }
+  | { type: 'pong'; playerId: string; t: number };
 
 export type BroadcastState = {
   type: 'state';

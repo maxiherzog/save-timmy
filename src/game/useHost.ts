@@ -7,6 +7,7 @@ import {
   sendAssignments,
   sendRole,
   sendState,
+  sendEvent,
   subscribeRoom,
   type NetEvent,
 } from './net';
@@ -124,6 +125,8 @@ export function useHost(code: string, hostToken: string) {
         p.ready = true;
         checkAllReady();
       }
+    } else if (e.type === 'ping') {
+      if (chRef.current) sendEvent(chRef.current, { type: 'pong', playerId: e.playerId, t: e.t }).catch(() => {});
     }
   }
 

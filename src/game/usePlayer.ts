@@ -13,6 +13,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
   const [state, setState] = useState<GameState | null>(null);
   const [role, setRole] = useState<SecretRole | null>(null);
   const [assignments, setAssignments] = useState<Record<string, CharacterId>>({});
+  const [ping, setPing] = useState<number>(0);
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
@@ -22,6 +23,11 @@ export function usePlayer(code: string, playerId: string, name: string) {
     if (!code || !playerId || !name) return;
 
     const ch = subscribeRoom(code, {
+      onEvent: (e) => {
+        if (e.type === 'pong' && e.playerId === playerId) {
+          setPing(performance.now() - e.t);
+        }
+      },
       onState: (msg) => setState(msg.state as GameState),
       onAssignments: (list) => {
         const map: Record<string, CharacterId> = {};
@@ -54,9 +60,17 @@ export function usePlayer(code: string, playerId: string, name: string) {
       }
     }, 66);
 
+    // Ping loop
+    const pingLoop = setInterval(() => {
+      if (chRef.current && (chRef.current as any).state === 'joined') {
+        sendEvent(chRef.current, { type: 'ping', playerId, t: performance.now() }).catch(() => {});
+      }
+    }, 1000);
+
     return () => {
       clearInterval(announce);
       clearInterval(heartbeat);
+      clearInterval(pingLoop);
       if (chRef.current) {
         sendEvent(chRef.current, { type: 'leave', playerId }).catch(() => {});
         supabase.removeChannel(chRef.current);
@@ -81,5 +95,5 @@ export function usePlayer(code: string, playerId: string, name: string) {
     if (chRef.current) sendEvent(chRef.current, { type: 'ready', playerId }).catch(() => {});
   }
 
-  return { state, role, assignments, setInput, pressConference, vote, ready };
+  return { state, role, assignments, ping, setInput, pressConference, vote, ready };
 }

@@ -33,6 +33,20 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
 
     if (testMode) {
       handleEvent({ type: 'join', playerId: 'dummy-1', name: 'Dummy' });
+      handleEvent({ type: 'join', playerId: 'dummy-2', name: 'Dummy 2' });
+      // Wait a bit to ensure they are registered, then start
+      setTimeout(() => {
+        if (stateRef.current?.phase === 'lobby') {
+          startMatch(imposterCount);
+          setTimeout(() => {
+            if (stateRef.current) {
+              for (const p of Object.values(stateRef.current.players)) {
+                handleEvent({ type: 'ready', playerId: p.id });
+              }
+            }
+          }, 4000); // Wait for starting phase to finish
+        }
+      }, 500);
     }
 
     async function ensureRoom() {

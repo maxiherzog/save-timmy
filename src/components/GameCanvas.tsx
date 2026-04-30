@@ -69,17 +69,19 @@ export function GameCanvas({ state }: Props) {
       ctx.translate(ox, oy);
       ctx.scale(scale, scale);
 
-      ctx.fillStyle = '#075985';
+      ctx.fillStyle = '#3a8ba8';
       ctx.fillRect(0, 0, MAP_W, MAP_H);
 
-      // wave bands
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = '#ffffff';
-      for (let y = 50; y < MAP_H; y += 40) {
-        const offset = Math.sin(whalePhase * 0.6 + y * 0.01) * 10;
-        ctx.fillRect(0, y + offset, MAP_W, 2);
+      // ambient waves
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 20; i++) {
+        const x = (whalePhase * 20 + i * 137) % MAP_W;
+        const y = (whalePhase * 15 + i * 193) % MAP_H;
+        ctx.beginPath();
+        ctx.arc(x, y, 5 + Math.sin(whalePhase + i) * 2, 0, Math.PI);
+        ctx.stroke();
       }
-      ctx.globalAlpha = 1;
       
       for (const z of HEAL_ZONES) {
         ctx.fillStyle = 'rgba(34, 211, 238, 0.25)';
@@ -107,55 +109,74 @@ export function GameCanvas({ state }: Props) {
       ctx.fillText('DOCK', DOCK_ZONE.x + DOCK_ZONE.w / 2, DOCK_ZONE.y + DOCK_ZONE.h / 2 + 8);
       ctx.restore();
 
-      // Sandbanks
-      for (const sb of s.sandbanks) {
-        if (!sb.visible || sb.poly.length < 3) continue;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);
-        for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
-        ctx.closePath();
-        
-        ctx.fillStyle = '#b89866';
-        ctx.fill();
-        
-        ctx.save();
-        ctx.clip();
-        const grad = ctx.createRadialGradient(sb.x, sb.y, 0, sb.x, sb.y, Math.max(sb.rx, sb.ry) * 1.1);
-        grad.addColorStop(0, '#ecd7a3');
-        grad.addColorStop(0.7, '#d4b27a');
-        grad.addColorStop(1, '#b89866');
-        ctx.fillStyle = grad;
-        ctx.fillRect(sb.x - sb.rx - 10, sb.y - sb.ry - 10, sb.rx * 2 + 20, sb.ry * 2 + 20);
-        
-        if (sb.rx > 80 && sb.ry > 40) {
-          ctx.fillStyle = 'rgba(80, 100, 55, 0.25)';
-          for (let gi = 0; gi < 4; gi++) {
-            const gx = sb.x + Math.cos(gi * 1.7) * sb.rx * 0.4;
-            const gy = sb.y + Math.sin(gi * 2.3) * sb.ry * 0.4;
-            ctx.beginPath();
-            ctx.arc(gx, gy, 6 + gi, 0, Math.PI * 2);
-            ctx.fill();
+        // Sandbanks
+        for (const sb of s.sandbanks) {
+          if (!sb.visible || sb.poly.length < 3) continue;
+          
+          // Ripple stroke
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);
+          for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
+          ctx.closePath();
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.sin(whalePhase * 3) * 0.1})`;
+          ctx.lineWidth = 4 + Math.sin(whalePhase * 2) * 2;
+          ctx.stroke();
+          ctx.restore();
+
+          // Shallow strip
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);
+          for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
+          ctx.closePath();
+          ctx.strokeStyle = '#8ed3e3';
+          ctx.lineWidth = 10;
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);
+          for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
+          ctx.closePath();
+          
+          ctx.fillStyle = '#b89866';
+          ctx.fill();
+          
+          ctx.save();
+          ctx.clip();
+          const grad = ctx.createRadialGradient(sb.x, sb.y, 0, sb.x, sb.y, Math.max(sb.rx, sb.ry) * 1.1);
+          grad.addColorStop(0, '#ecd7a3');
+          grad.addColorStop(0.7, '#d4b27a');
+          grad.addColorStop(1, '#b89866');
+          ctx.fillStyle = grad;
+          ctx.fillRect(sb.x - sb.rx - 10, sb.y - sb.ry - 10, sb.rx * 2 + 20, sb.ry * 2 + 20);
+          
+          if (sb.rx > 80 && sb.ry > 40) {
+            ctx.fillStyle = 'rgba(80, 100, 55, 0.25)';
+            for (let gi = 0; gi < 4; gi++) {
+              const gx = sb.x + Math.cos(gi * 1.7) * sb.rx * 0.4;
+              const gy = sb.y + Math.sin(gi * 2.3) * sb.ry * 0.4;
+              ctx.beginPath();
+              ctx.arc(gx, gy, 6 + gi, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+          
+          ctx.restore();
+          
+          // Restore text drawing for sandbanks
+          if (sb.name) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(40,30,20,0.7)';
+            ctx.font = '700 16px "Comic Neue", system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(sb.name, sb.x, sb.y + 6);
+            ctx.restore();
           }
         }
-        ctx.restore();
-        
-        ctx.strokeStyle = 'rgba(90,70,40,0.35)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        
-        ctx.restore();
-        
-        // Restore text drawing for sandbanks
-        if (sb.name) {
-          ctx.save();
-          ctx.fillStyle = 'rgba(40,30,20,0.7)';
-          ctx.font = '700 16px "Comic Neue", system-ui';
-          ctx.textAlign = 'center';
-          ctx.fillText(sb.name, sb.x, sb.y + 6);
-          ctx.restore();
-        }
-      }
 
       // Draw decorations in a separate pass after all sandbanks are drawn
       for (const sb of s.sandbanks) {
@@ -511,7 +532,24 @@ function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
   const now = performance.now() / 1000;
   for (const fx of state.fx as any[]) {
     const age = now - fx.t;
-    if (fx.kind === 'hupen') {
+    if (fx.kind === 'wake') {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 0.4 - age * 0.4);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.translate(fx.x, fx.y);
+      ctx.rotate(fx.heading! + Math.PI / 2);
+      
+      const spread = age * 40;
+      const length = 10 + age * 20;
+      
+      ctx.beginPath();
+      ctx.moveTo(-spread, -length);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(spread, -length);
+      ctx.stroke();
+      ctx.restore();
+    } else if (fx.kind === 'hupen') {
       ctx.save();
       ctx.globalAlpha = Math.max(0, 1 - age / 0.3);
       ctx.strokeStyle = '#f87171';

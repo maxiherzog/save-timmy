@@ -308,9 +308,9 @@ export function createMap(seed: number): Sandbank[] {
     // Flat part on the right (e.g. last 20%)
     if (t > 0.8) return -wallVariance; // Push it towards the edge to make it flat
     // Inward bulge to the right of the dock (dock ends at x=440, t=0.275)
-    if (t > 0.3 && t < 0.6) return 40; 
+    if (t > 0.5 && t < 0.8) return 100; 
     // Kink around 60-70%
-    if (t > 0.6 && t < 0.7) return 20; 
+    if (t > 0 && t < 0.5) return 20; 
     return 0;
   }));
   

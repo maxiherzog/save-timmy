@@ -122,7 +122,7 @@ export type GameState = {
   bannerMessage: string;
   bannerUntil: number;
   fx: Array<
-    | { id: number; kind: 'hupen' | 'trampeln' | 'crash'; x: number; y: number; t: number }
+    | { id: number; kind: 'hupen' | 'trampeln' | 'crash' | 'wake'; x: number; y: number; t: number; heading?: number }
     | { id: number; kind: 'damage'; x: number; y: number; t: number; amount: number }
     | { id: number; kind: 'blow'; x: number; y: number; t: number }
   >;

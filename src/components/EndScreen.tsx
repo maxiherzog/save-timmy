@@ -12,7 +12,6 @@ type Props = {
 const REASON_TEXT: Record<string, string> = {
   barge: 'Timmy ist sicher in der Barge angekommen!',
   whale_died: 'Timmy hat es nicht geschafft.',
-  imposter_voted: 'Der Saboteur wurde per Pressekonferenz entlarvt.',
   timeout: 'Die Zeit ist abgelaufen. Timmy konnte nicht gerettet werden.',
 };
 

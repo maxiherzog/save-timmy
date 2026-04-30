@@ -389,6 +389,7 @@ export function startVote(state: GameState, callerId: string, now: number) {
 
 export function castVote(state: GameState, voterId: string, targetId: string) {
   if (!state.vote.active || !state.players[voterId]?.boat.alive) return;
+  if (voterId === targetId) return; // Cannot vote for yourself
   state.vote.votes[voterId] = targetId;
 }
 
@@ -404,19 +405,18 @@ export function resolveVote(state: GameState) {
   for (const [tgt, count] of Object.entries(tally)) {
     if (count > topCount) { topCount = count; ejected = tgt; }
   }
+  
   if (ejected && ejected !== 'skip' && topCount >= threshold) {
-    const imposterIds = (state as any)._imposterIds as string[] | undefined || [];
-    if (imposterIds.includes(ejected)) {
-      endMatch(state, 'rescuers', 'imposter_voted');
-    } else if (state.players[ejected]) {
+    if (state.players[ejected]) {
       state.players[ejected].boat.alive = false;
-      state.bannerMessage = `${state.players[ejected].name} wurde zurückgetreten!`;
+      state.bannerMessage = `${state.players[ejected].name} wurde des Amtes enthoben!`;
       state.bannerUntil = performance.now() / 1000 + 4;
     }
   } else {
-    state.bannerMessage = 'Keine Mehrheit.';
+    state.bannerMessage = 'Die Abstimmung ergab keine Mehrheit.';
     state.bannerUntil = performance.now() / 1000 + 4;
   }
+  
   state.vote = { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} };
   state.phase = 'playing';
 }

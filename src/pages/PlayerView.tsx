@@ -176,15 +176,21 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
           {alive.map((p) => {
             const ch = characterById(p.characterId);
             const isVoted = voted === p.id;
+            const isSelf = p.id === playerId;
             return (
-              <button
+              <div
                 key={p.id}
-                onClick={() => { setVoted(p.id); vote(p.id); navigator.vibrate?.(40); }}
-                disabled={!me?.boat.alive}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition ${
+                onClick={() => {
+                  if (isSelf) return;
+                  setVoted(p.id);
+                  vote(p.id);
+                  navigator.vibrate?.(40);
+                }}
+                className={`p-4 rounded-xl flex items-center gap-4 transition-all ${
+                  isSelf ? 'opacity-50 cursor-not-allowed bg-slate-800' :
                   isVoted
-                    ? 'bg-blue-100 border-blue-500'
-                    : 'bg-white border-slate-200 hover:border-slate-400'
+                    ? 'bg-blue-500/20 border-2 border-blue-500 ring-2 ring-blue-500/50 scale-[1.02]'
+                    : 'bg-slate-800/80 border-2 border-slate-700 active:scale-95'
                 }`}
               >
                 <div className="text-left flex-1">
@@ -192,7 +198,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
                   <div className="text-xs text-slate-500">{ch.name}</div>
                 </div>
                 {isVoted && <div className="text-blue-500 font-bold text-2xl">✓</div>}
-              </button>
+              </div>
             );
           })}
           <button

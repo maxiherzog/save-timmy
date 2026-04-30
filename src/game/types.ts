@@ -98,7 +98,7 @@ export type GameState = {
   vote: VoteState;
   ended: null | {
     winner: 'rescuers' | 'imposter';
-    reason: 'barge' | 'whale_died' | 'imposter_voted';
+    reason: 'barge' | 'whale_died';
     imposterIds: string[];
     imposterCharacters: CharacterId[];
     imposterNames: string[];

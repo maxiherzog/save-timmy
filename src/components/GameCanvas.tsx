@@ -172,9 +172,6 @@ export function GameCanvas({ state }: Props) {
         ctx.save();
         ctx.translate(w.x, w.y);
         ctx.rotate(w.heading);
-        if (Math.cos(w.heading) < 0) {
-          ctx.scale(1, -1);
-        }
         ctx.globalAlpha = w.hp < 30 ? 0.6 : w.hp < 15 ? 0.35 : 1;
         drawWhale(ctx, w, whalePhase);
         ctx.restore();

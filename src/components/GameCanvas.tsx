@@ -216,19 +216,32 @@ export function GameCanvas({ state }: Props) {
         ctx.globalAlpha = Math.min(0.4, p.boat.speed / 200);
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.ellipse(-28, 0, 28, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(-28, 0, 28, 12, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
         
+        // Boat Body (Elliptical / Dinghy shape)
         ctx.fillStyle = c.color;
+        ctx.strokeStyle = c.accent;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(22, 0);
-        ctx.lineTo(-18, -12);
-        ctx.lineTo(-18, 12);
+        ctx.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Engine / Back
+        ctx.fillStyle = c.accent;
+        ctx.fillRect(-22, -6, 8, 12);
+
+        // Front indicator (Arrow / Stripe)
+        ctx.fillStyle = c.accent;
+        ctx.beginPath();
+        ctx.moveTo(18, 0);
+        ctx.lineTo(8, -6);
+        ctx.lineTo(8, 6);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = c.accent;
-        ctx.fillRect(-12, -4, 16, 8);
+
         ctx.restore();
 
         if (isStunned) {

@@ -146,15 +146,24 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
         <button
           onClick={() => { if (canReady && !isReady) ready(); }}
           disabled={!canReady || isReady}
-          className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg border-2 transition ${
+          className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg border-2 transition-all ${
             isReady
-              ? 'bg-green-500 border-green-600 text-white'
+              ? 'bg-green-100 border-green-300 text-green-700 shadow-inner'
               : canReady
-              ? 'bg-slate-800 hover:bg-slate-900 border-slate-900 text-white'
-              : 'bg-slate-300 border-slate-400 text-slate-500 cursor-wait'
+              ? 'bg-slate-800 hover:bg-slate-900 border-slate-900 text-white active:scale-95 shadow-xl'
+              : 'bg-slate-200 border-slate-300 text-slate-500 cursor-wait'
           }`}
         >
-          {isReady ? 'BEREIT' : canReady ? 'ICH BIN BEREIT' : 'Einen Moment...'}
+          {isReady ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+              Warte auf andere...
+            </div>
+          ) : canReady ? (
+            'ICH BIN BEREIT'
+          ) : (
+            'Einen Moment...'
+          )}
         </button>
         <div className="mt-3 text-sm text-slate-500 tabular-nums">
           {readyCount} / {connected.length} Spieler bereit
@@ -166,11 +175,11 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   if (state.phase === 'voting') {
     const alive = Object.values(state.players).filter((p) => p.boat.alive);
     return (
-      <div className="min-h-screen p-5 flex flex-col bg-slate-900">
+      <div className="min-h-screen p-5 flex flex-col bg-slate-50">
         <div className="text-center mb-6">
-          <Mic className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <div className="font-bold text-2xl text-white">PRESSEKONFERENZ</div>
-          <div className="text-sm text-slate-400">Wer ist der Saboteur? Stimme jetzt ab.</div>
+          <Mic className="w-8 h-8 text-slate-700 mx-auto mb-2" />
+          <div className="font-bold text-2xl text-slate-900">PRESSEKONFERENZ</div>
+          <div className="text-sm text-slate-600">Wer ist der Saboteur? Stimme jetzt ab.</div>
         </div>
         <div className="flex-1 space-y-3 overflow-y-auto pb-6">
           {alive.map((p) => {
@@ -186,22 +195,19 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
                   vote(p.id);
                   navigator.vibrate?.(40);
                 }}
-                className={`p-4 rounded-xl flex items-center gap-4 ${
-                  isSelf ? 'opacity-50 cursor-not-allowed bg-slate-800 border-2 border-slate-700' :
+                className={`p-4 rounded-xl flex items-center gap-4 border-2 transition-transform ${
+                  isSelf ? 'opacity-50 cursor-not-allowed border-slate-300' :
                   isVoted
-                    ? 'bg-blue-900/40 border-2 border-blue-500 ring-2 ring-blue-500/50'
-                    : 'bg-slate-800 border-2 border-slate-700 active:bg-slate-700'
+                    ? 'scale-[1.02] border-slate-800 ring-2 ring-slate-800/20 shadow-md'
+                    : 'border-transparent shadow-sm active:scale-95'
                 }`}
+                style={{ backgroundColor: ch.color }}
               >
-                <div 
-                  className="w-4 h-12 rounded-full shadow-inner" 
-                  style={{ backgroundColor: ch.color, border: `2px solid ${ch.accent}` }}
-                />
                 <div className="text-left flex-1 min-w-0">
-                  <div className="font-bold text-lg text-white truncate">{p.name}</div>
-                  <div className="text-xs text-slate-400 truncate">{ch.name}</div>
+                  <div className="font-bold text-lg text-slate-900 truncate">{p.name}</div>
+                  <div className="text-xs text-slate-700 truncate font-semibold">{ch.name}</div>
                 </div>
-                {isVoted && <div className="text-blue-400 font-bold text-2xl pr-2">✓</div>}
+                {isVoted && <div className="text-slate-900 font-bold text-2xl pr-2">✓</div>}
               </div>
             );
           })}
@@ -209,10 +215,10 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
             <button
               onClick={() => { setVoted('skip'); vote('skip'); }}
               disabled={!me?.boat.alive}
-              className={`w-full p-4 rounded-xl border-2 font-bold ${
+              className={`w-full p-4 rounded-xl border-2 font-bold transition-transform ${
                 voted === 'skip'
-                  ? 'bg-slate-700 border-slate-500 text-white'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-slate-200 border-slate-400 text-slate-900 scale-[1.02]'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 active:scale-95'
               }`}
             >
               Niemanden rauswerfen

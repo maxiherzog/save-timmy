@@ -346,23 +346,25 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
       const radiusSum = BOAT_RADIUS * 2;
       const dx = p1.boat.x - p2.boat.x, dy = p1.boat.y - p2.boat.y;
       if (dx * dx + dy * dy < radiusSum * radiusSum) {
-        playCrashSound(1);
-        state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (p1.boat.x + p2.boat.x) / 2, y: (p1.boat.y + p2.boat.y) / 2, t: now });
-        
         resolveCollision(p1.boat, p2.boat, radiusSum);
         
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const nx = dx / dist;
-        const ny = dy / dist;
-        const bumpForce = 220;
-        p1.boat.vx += nx * bumpForce;
-        p1.boat.vy += ny * bumpForce;
-        p2.boat.vx -= nx * bumpForce;
-        p2.boat.vy -= ny * bumpForce;
+        if (p1.boat.ramCooldown <= 0 && p2.boat.ramCooldown <= 0) {
+          playCrashSound(1);
+          state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (p1.boat.x + p2.boat.x) / 2, y: (p1.boat.y + p2.boat.y) / 2, t: now });
+          
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const bumpForce = 220;
+          p1.boat.vx += nx * bumpForce;
+          p1.boat.vy += ny * bumpForce;
+          p2.boat.vx -= nx * bumpForce;
+          p2.boat.vy -= ny * bumpForce;
 
-        p1.boat.ramCooldown = 1; p2.boat.ramCooldown = 1;
-        p1.boat.stunnedUntil = now + 2;
-        p2.boat.stunnedUntil = now + 2;
+          p1.boat.ramCooldown = 0.5; p2.boat.ramCooldown = 0.5;
+          p1.boat.stunnedUntil = now + 2;
+          p2.boat.stunnedUntil = now + 2;
+        }
       }
     }
   }

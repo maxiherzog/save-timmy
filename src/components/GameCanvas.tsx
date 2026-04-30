@@ -75,11 +75,11 @@ export function GameCanvas({ state }: Props) {
       // ambient waves
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 1;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 60; i++) {
         const x = (whalePhase * 20 + i * 137) % MAP_W;
         const y = (whalePhase * 15 + i * 193) % MAP_H;
         ctx.beginPath();
-        ctx.arc(x, y, 5 + Math.sin(whalePhase + i) * 2, 0, Math.PI);
+        ctx.arc(x, y, 5 + Math.sin(whalePhase * 2 + i) * 2, 0, Math.PI);
         ctx.stroke();
       }
       
@@ -119,8 +119,10 @@ export function GameCanvas({ state }: Props) {
           ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);
           for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
           ctx.closePath();
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.sin(whalePhase * 3) * 0.1})`;
-          ctx.lineWidth = 4 + Math.sin(whalePhase * 2) * 2;
+          // Per-bank pulsing phase
+          const bankPhase = whalePhase * 2 + (sb.x + sb.y) * 0.05;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.sin(bankPhase) * 0.1})`;
+          ctx.lineWidth = 6 + Math.sin(bankPhase * 0.5) * 4;
           ctx.stroke();
           ctx.restore();
 
@@ -131,7 +133,7 @@ export function GameCanvas({ state }: Props) {
           for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
           ctx.closePath();
           ctx.strokeStyle = '#8ed3e3';
-          ctx.lineWidth = 10;
+          ctx.lineWidth = 18;
           ctx.stroke();
           ctx.restore();
 

@@ -349,6 +349,9 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.restore();
 
   // Back Fin (Dorsal)
+  ctx.fillStyle = '#a8b6c4';
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(-10, -20 + bob);
   ctx.bezierCurveTo(-5, -35 + bob, 5, -30 + bob, 10, -20 + bob);

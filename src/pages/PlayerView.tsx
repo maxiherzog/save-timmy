@@ -246,8 +246,8 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
               disabled={!me?.boat.alive}
               className={`w-full p-4 rounded-xl border-2 font-bold transition-transform ${
                 voted === 'skip'
-                  ? 'bg-slate-200 border-slate-400 text-slate-900 scale-[1.02]'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 active:scale-95'
+                  ? 'bg-slate-200 border-slate-400 text-slate-900'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
               }`}
             >
               Niemanden rauswerfen

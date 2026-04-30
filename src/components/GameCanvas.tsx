@@ -169,7 +169,7 @@ export function GameCanvas({ state }: Props) {
         ctx.translate(w.x, w.y);
         ctx.rotate(w.heading);
         ctx.globalAlpha = w.hp < 30 ? 0.6 : w.hp < 15 ? 0.35 : 1;
-        drawWhale(ctx, w, whalePhase);
+        drawWhale(ctx, whalePhase);
         ctx.restore();
 
         if (w.hp > 40 && Math.sin(whalePhase * 1.2) > 0.7) {
@@ -281,105 +281,99 @@ export function GameCanvas({ state }: Props) {
   );
 }
 
-function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], phase: number) {
+function drawWhale(ctx: CanvasRenderingContext2D, phase: number) {
   const bob = Math.sin(phase * 2) * 2;
-  const anim = Math.sin(phase * 2.2) * (whale.state === 'stranded' ? 0.2 : 1);
 
-  // Pectoral fins (flippers)
-  ctx.fillStyle = '#2c3e50';
+  // Body color
+  ctx.fillStyle = '#a8b6c4';
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 2;
+
+  // Main body shape
   ctx.beginPath();
-  ctx.moveTo(-10, 10 + bob);
-  ctx.bezierCurveTo(-30, 35 + bob, -25, 45 + bob, 0, 30 + bob);
+  ctx.moveTo(45, bob);
+  ctx.bezierCurveTo(40, -25 + bob, -20, -30 + bob, -50, -10 + bob); // Top line
+  ctx.bezierCurveTo(-60, -5 + bob, -70, 0 + bob, -68, 5 + bob); // Tail top
+  ctx.bezierCurveTo(-72, 15 + bob, -60, 20 + bob, -50, 15 + bob); // Tail bottom
+  ctx.bezierCurveTo(-20, 32 + bob, 30, 30 + bob, 45, bob); // Bottom line
   ctx.closePath();
   ctx.fill();
+  ctx.stroke();
+  
+  // Dorsal fin
   ctx.beginPath();
-  ctx.moveTo(-10, -10 - bob);
-  ctx.bezierCurveTo(-30, -35 - bob, -25, -45 - bob, 0, -30 - bob);
+  ctx.moveTo(-20, -28 + bob);
+  ctx.bezierCurveTo(-15, -40 + bob, -5, -35 + bob, -10, -26 + bob);
+  ctx.fill();
+  ctx.stroke();
+
+  // White belly and lower jaw
+  ctx.fillStyle = '#eaf0f6';
+  ctx.beginPath();
+  ctx.moveTo(45, bob);
+  ctx.bezierCurveTo(35, 28 + bob, -10, 30 + bob, -45, 14 + bob);
+  ctx.bezierCurveTo(0, 15 + bob, 40, 15 + bob, 45, bob);
   ctx.closePath();
   ctx.fill();
-
-  // Main body
-  ctx.fillStyle = '#1f2937';
-  ctx.beginPath();
-  ctx.ellipse(0, bob, 48, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#d1d5db';
-  ctx.beginPath();
-  ctx.ellipse(-4, 8 + bob, 38, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.stroke();
 
   // Throat pleats/grooves
-  ctx.strokeStyle = '#b0b8c0';
+  ctx.strokeStyle = '#a8b6c4';
   ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.5;
-  for (let i = -8; i <= 8; i += 4) {
-    if (i === 0) continue;
+  for(let i=1; i<5; i++) {
     ctx.beginPath();
-    ctx.moveTo(10, 8 + bob + i);
-    ctx.bezierCurveTo(0, 8 + bob + i, -15, 10 + bob + i*1.2, -30, 10 + bob + i);
+    ctx.moveTo(35, 2 + bob + i*3);
+    ctx.bezierCurveTo(10, 5 + bob + i*4, -20, 5 + bob + i*3, -30, 3 + bob + i*2);
     ctx.stroke();
   }
-  ctx.globalAlpha = 1;
 
 
-  // Tail (fluke)
-  ctx.fillStyle = '#1f2937';
+  // Flipper
+  ctx.fillStyle = '#a8b6c4';
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-46, bob);
-  ctx.bezierCurveTo(-55, -8 + bob, -58, -14 + bob + anim * 5, -64, -16 + bob + anim * 8);
-  ctx.bezierCurveTo(-60, bob, -60, bob, -64, 16 + bob - anim * 8);
-  ctx.bezierCurveTo(-58, 14 + bob, -55, 8 + bob, -46, bob);
+  ctx.moveTo(0, 22 + bob);
+  ctx.bezierCurveTo(-15, 35 + bob, -10, 45 + bob, 5, 35 + bob);
   ctx.closePath();
   ctx.fill();
-
-  // Head with tubercles (bumps)
-  ctx.fillStyle = '#1f2937';
-  ctx.beginPath();
-  ctx.arc(38, -2, 14, 0, Math.PI * 2);
-  ctx.fill();
-  for (let i = 0; i < 5; i++) {
-    const angle = -0.8 + i * 0.4;
-    const r = 14;
-    ctx.beginPath();
-    ctx.arc(38 + Math.cos(angle) * r, -2 + Math.sin(angle) * r, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.stroke();
 
 
-  let mouthY = 2;
-  let eyeBrowTranslate = 2;
-  if (whale.state === 'stranded' || whale.hp < 30) {
-    mouthY = -2;
-    eyeBrowTranslate = -1;
-  } else if (whale.hp < 60) {
-    mouthY = 0;
-    eyeBrowTranslate = 1;
-  }
-
+  // Eye
   const eyeX = 28;
-  const eyeY = -6 + bob;
+  const eyeY = -4 + bob;
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
+  ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = '#1f2937';
   ctx.beginPath();
-  ctx.arc(eyeX + 1, eyeY, 2, 0, Math.PI * 2);
+  ctx.arc(eyeX + 1, eyeY, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1.2;
+
+  // Mouth
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(eyeX - 2, eyeY - 3 + eyeBrowTranslate);
-  ctx.bezierCurveTo(eyeX, eyeY - 4 + eyeBrowTranslate, eyeX + 2, eyeY - 3 + eyeBrowTranslate, eyeX + 3, eyeY - 2 + eyeBrowTranslate);
+  ctx.moveTo(42, -2 + bob);
+  ctx.bezierCurveTo(35, 2 + bob, 25, 5 + bob, 18, 4 + bob);
   ctx.stroke();
 
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1;
+  // Tubercles (bumps) and blowhole
+  ctx.fillStyle = '#a8b6c4';
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.arc(38 - i * 10, -20 - Math.sin(i*0.5)*2 + bob, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  // Blowhole
+  ctx.fillStyle = '#374151';
   ctx.beginPath();
-  ctx.moveTo(26, 4 + bob);
-  ctx.bezierCurveTo(30, 4 + bob + mouthY, 34, 4 + bob + mouthY, 38, 4 + bob);
-  ctx.stroke();
+  ctx.arc(20, -22 + bob, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {

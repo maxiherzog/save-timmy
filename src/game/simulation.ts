@@ -1,6 +1,6 @@
 import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
-import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, HARBOR_ZONES } from './map';
+import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, DOCK_ZONE } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION, HEAL_RATE_PER_SEC } from './types';
 
@@ -24,7 +24,10 @@ export function createInitialWhale(): Whale {
 }
 
 export function createBoat(index: number, _total: number): Boat {
-  const spawnPos = HARBOR_ZONES[index % HARBOR_ZONES.length];
+  const spawnPos = {
+    x: DOCK_ZONE.x + 40 + (index % 5) * 40,
+    y: DOCK_ZONE.y + 40 + Math.floor(index / 5) * 60
+  };
   return {
     x: spawnPos.x,
     y: spawnPos.y,

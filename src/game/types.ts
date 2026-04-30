@@ -18,6 +18,7 @@ export type Boat = {
   trampelnCooldown: number;
   ramCooldown: number;
   trampelnStamina: number;
+  stunnedUntil: number;
   alive: boolean;
   stats: {
     hupen: number;
@@ -62,8 +63,7 @@ export type Barge = {
   y: number;
   w: number;
   h: number;
-  openingY: number;
-  openingSize: number;
+  wallThickness: number;
 };
 
 export type Player = {

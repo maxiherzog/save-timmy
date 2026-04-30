@@ -33,6 +33,7 @@ export function createBoat(index: number, _total: number): Boat {
     trampelnCooldown: 0,
     ramCooldown: 0,
     trampelnStamina: TRAMPELN_STAMINA_MAX,
+    stunnedUntil: 0,
     alive: true,
     stats: { hupen: 0, trampeln: 0, rams: 0, healTime: 0 },
   };
@@ -68,44 +69,48 @@ const BOAT_FRICTION = 0.94;
 const BOAT_RADIUS = 20;
 const WHALE_RADIUS = 34;
 
-function handleBargeCollision(entity: {x: number, y: number}, radius: number, state: GameState) {
-  const b = state.barge;
-  // Entity inside barge box
-  if (entity.x + radius > b.x && entity.x - radius < b.x + b.w &&
-      entity.y + radius > b.y && entity.y - radius < b.y + b.h) {
-    
-    // Check if in opening (left side of barge)
-    const inOpening = entity.y > b.openingY && entity.y < b.openingY + b.openingSize && entity.x - radius < b.x + b.w;
-    if (inOpening) return;
-
-    // Push out to nearest edge
-    const distLeft = (entity.x + radius) - b.x;
-    const distRight = (b.x + b.w) - (entity.x - radius);
-    const distTop = (entity.y + radius) - b.y;
-    const distBottom = (b.y + b.h) - (entity.y - radius);
-    
-    const min = Math.min(distLeft, distRight, distTop, distBottom);
-    const PUSH_OFFSET = 10;
-    if (min === distLeft) entity.x = b.x - radius - PUSH_OFFSET;
-    else if (min === distRight) entity.x = b.x + b.w + radius + PUSH_OFFSET;
-    else if (min === distTop) entity.y = b.y - radius - PUSH_OFFSET;
-    else entity.y = b.y + b.h + radius + PUSH_OFFSET;
+function resolveCircleAABB(entity: {x: number, y: number}, radius: number, rx: number, ry: number, rw: number, rh: number) {
+  const cx = Math.max(rx, Math.min(entity.x, rx + rw));
+  const cy = Math.max(ry, Math.min(entity.y, ry + rh));
+  const dx = entity.x - cx;
+  const dy = entity.y - cy;
+  const distSq = dx * dx + dy * dy;
+  
+  if (distSq < radius * radius && distSq > 0.0001) {
+    const dist = Math.sqrt(distSq);
+    const overlap = radius - dist;
+    entity.x += (dx / dist) * overlap;
+    entity.y += (dy / dist) * overlap;
   }
 }
 
-function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: number, state: GameState) {
+function handleBargeCollision(entity: {x: number, y: number}, radius: number, state: GameState) {
+  const b = state.barge;
+  // Top wall
+  resolveCircleAABB(entity, radius, b.x, b.y, b.w, b.wallThickness);
+  // Bottom wall
+  resolveCircleAABB(entity, radius, b.x, b.y + b.h - b.wallThickness, b.w, b.wallThickness);
+  // Right wall
+  resolveCircleAABB(entity, radius, b.x + b.w - b.wallThickness, b.y, b.wallThickness, b.h);
+}
+
+function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: number, state: GameState, now: number) {
   const { boat } = p;
   if (!boat.alive) return;
 
-  const ix = Math.max(-1, Math.min(1, input.joystickX));
-  const iy = Math.max(-1, Math.min(1, input.joystickY));
-  const mag = Math.sqrt(ix * ix + iy * iy);
-  if (mag > 0.08) {
-    const nx = ix / Math.max(mag, 1);
-    const ny = iy / Math.max(mag, 1);
-    boat.vx += nx * BOAT_ACCEL * dt;
-    boat.vy += ny * BOAT_ACCEL * dt;
-    boat.heading = Math.atan2(ny, nx);
+  const isStunned = now < boat.stunnedUntil;
+
+  if (!isStunned) {
+    const ix = Math.max(-1, Math.min(1, input.joystickX));
+    const iy = Math.max(-1, Math.min(1, input.joystickY));
+    const mag = Math.sqrt(ix * ix + iy * iy);
+    if (mag > 0.08) {
+      const nx = ix / Math.max(mag, 1);
+      const ny = iy / Math.max(mag, 1);
+      boat.vx += nx * BOAT_ACCEL * dt;
+      boat.vy += ny * BOAT_ACCEL * dt;
+      boat.heading = Math.atan2(ny, nx);
+    }
   }
   boat.vx *= Math.pow(BOAT_FRICTION, dt * 60);
   boat.vy *= Math.pow(BOAT_FRICTION, dt * 60);
@@ -331,7 +336,7 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
 
   const players = Object.values(state.players);
   for (const p of players) {
-    if (p.connected) updateBoat(p, p.input, dt, state);
+    if (p.connected) updateBoat(p, p.input, dt, state, now);
   }
 
   for (let i = 0; i < players.length; i++) {
@@ -343,8 +348,21 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
       if (dx * dx + dy * dy < radiusSum * radiusSum) {
         playCrashSound(1);
         state.fx.push({ id: fxIdCounter++, kind: 'crash', x: (p1.boat.x + p2.boat.x) / 2, y: (p1.boat.y + p2.boat.y) / 2, t: now });
+        
         resolveCollision(p1.boat, p2.boat, radiusSum);
+        
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const bumpForce = 220;
+        p1.boat.vx += nx * bumpForce;
+        p1.boat.vy += ny * bumpForce;
+        p2.boat.vx -= nx * bumpForce;
+        p2.boat.vy -= ny * bumpForce;
+
         p1.boat.ramCooldown = 1; p2.boat.ramCooldown = 1;
+        p1.boat.stunnedUntil = now + 2;
+        p2.boat.stunnedUntil = now + 2;
       }
     }
   }

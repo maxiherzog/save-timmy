@@ -130,21 +130,21 @@ export function GameCanvas({ state }: Props) {
 
       const b = s.barge;
       const drifting = s.bargeDrift && performance.now() / 1000 < s.bargeDrift.driftingUntil;
-      ctx.fillStyle = '#3a2418';
-      ctx.fillRect(b.x, b.y, b.w, b.h);
       
-      // Draw opening
-      ctx.fillStyle = '#075985'; // Same as water
-      ctx.fillRect(b.x - 5, b.openingY, 10, b.openingSize);
+      // Draw Barge (U-Shape)
+      ctx.fillStyle = '#3a2418';
+      // Top
+      ctx.fillRect(b.x, b.y, b.w, b.wallThickness);
+      // Bottom
+      ctx.fillRect(b.x, b.y + b.h - b.wallThickness, b.w, b.wallThickness);
+      // Right
+      ctx.fillRect(b.x + b.w - b.wallThickness, b.y, b.wallThickness, b.h);
 
       ctx.fillStyle = '#1a3a50';
       ctx.fillRect(b.x + 14, b.y + 14, b.w - 28, b.h - 28);
-      ctx.fillStyle = '#0ea5a0';
-      ctx.fillRect(b.x - 6, b.y + b.h / 2 - 40, 12, 80);
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(b.x, b.y, b.w, b.h);
-      ctx.lineWidth = 1;
+      
+      // Remove the inner blue block and the vertical teal line as it's completely open now
+
       ctx.fillStyle = '#fbbf24';
       ctx.font = '700 22px "Comic Neue", system-ui';
       ctx.textAlign = 'center';
@@ -211,6 +211,8 @@ export function GameCanvas({ state }: Props) {
         ctx.translate(p.boat.x, p.boat.y);
         ctx.rotate(p.boat.heading);
         
+        const isStunned = now < p.boat.stunnedUntil;
+
         ctx.globalAlpha = Math.min(0.4, p.boat.speed / 200);
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
@@ -228,6 +230,16 @@ export function GameCanvas({ state }: Props) {
         ctx.fillStyle = c.accent;
         ctx.fillRect(-12, -4, 16, 8);
         ctx.restore();
+
+        if (isStunned) {
+          ctx.save();
+          ctx.translate(p.boat.x, p.boat.y - 25);
+          ctx.rotate(now * 5);
+          ctx.font = '20px "Comic Neue", system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('💫', 0, 0);
+          ctx.restore();
+        }
 
         ctx.save();
         ctx.translate(p.boat.x, p.boat.y - 32);

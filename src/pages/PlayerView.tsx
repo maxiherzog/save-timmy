@@ -22,6 +22,18 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     if (state?.phase !== 'voting') setVoted(null);
   }, [state?.phase]);
 
+  useEffect(() => {
+    // Prevent iOS/Android pull-to-refresh and bounce scrolling on the player view
+    const preventDefault = (e: TouchEvent) => {
+      if (e.touches.length > 1) return; // Allow pinch-zoom occasionally if really needed, but prevent single finger scroll
+      e.preventDefault();
+    };
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+    return () => {
+      document.removeEventListener('touchmove', preventDefault);
+    };
+  }, []);
+
   const me = state?.players[playerId];
   const myCharacter = assignments[playerId] ?? me?.characterId ?? 'hilse';
   const c = characterById(myCharacter);

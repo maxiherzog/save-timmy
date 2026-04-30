@@ -9,6 +9,16 @@ import starsSvg from '../assets/stars.svg';
 const starsImg = new Image();
 starsImg.src = starsSvg;
 
+const decorationImages: Record<string, HTMLImageElement> = {};
+const decorationFiles = import.meta.glob('../assets/decorations/*.png', { eager: true });
+
+for (const path in decorationFiles) {
+  const name = path.split('/').pop()!;
+  const img = new Image();
+  img.src = (decorationFiles[path] as any).default;
+  decorationImages[name] = img;
+}
+
 type Props = { state: GameState };
 
 export function GameCanvas({ state }: Props) {
@@ -120,6 +130,20 @@ export function GameCanvas({ state }: Props) {
         ctx.strokeStyle = 'rgba(90,70,40,0.35)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
+
+        // Draw decorations
+        for (const dec of sb.decorations) {
+          const img = decorationImages[dec.asset];
+          if (!img || !img.complete) continue;
+          ctx.save();
+          ctx.translate(dec.x, dec.y);
+          ctx.rotate(dec.rotation);
+          if (dec.mirrored) ctx.scale(-1, 1);
+          ctx.scale(dec.scale, dec.scale);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+          ctx.restore();
+        }
+
         ctx.restore();
         
         // Restore text drawing for sandbanks

@@ -45,6 +45,15 @@ export type Whale = {
   accumulatedDamage: number;
 };
 
+export type Decoration = {
+  asset: string;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  mirrored: boolean;
+};
+
 export type Sandbank = {
   x: number;
   y: number;
@@ -52,6 +61,7 @@ export type Sandbank = {
   ry: number;
   name: string;
   poly: Array<[number, number]>;
+  decorations: Decoration[];
 };
 
 export type HealZone = {

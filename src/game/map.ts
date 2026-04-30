@@ -107,6 +107,7 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
     ry: (bb.maxY - bb.minY) / 2,
     name,
     poly,
+    decorations: [],
   };
 }
 
@@ -120,6 +121,7 @@ function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number,
     ry: (bb.maxY - bb.minY) / 2,
     name: '',
     poly,
+    decorations: [],
   };
 }
 
@@ -128,6 +130,86 @@ const SANDBANK_NAMES = [
   'Boltenhagen Bank', 'Schlutuper Sand', 'Travemünde Rinne', 'Priwall Untiefe',
   'Fehmarn Belt Bank', 'Grömitzer Düne', 'Kellenhusen Riff'
 ];
+
+const DECORATION_ASSETS = {
+  foliage: ['bush1.png', 'bush2.png', 'bush3.png', 'bush4.png', 'grass1.png', 'grass2.png'],
+  stones: ['stone1.png', 'stone2.png', 'stone3.png', 'stone4.png', 'stone5.png'],
+  pebbles: ['pebbles1.png', 'pebbles2.png', 'pebbles3.png'],
+  shells: ['seashell1.png', 'seashell2.png', 'seashell3.png'],
+  trees: ['tree1.png', 'tree2.png'],
+  house: 'lighthouse1.png',
+};
+
+function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
+  let lighthousePlaced = false;
+
+  for (const sb of sandbanks) {
+    const isCoast = sb.name === '';
+    const bb = bbox(sb.poly);
+    const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
+    
+    // Density: roughly one decoration per 2500 square units for coast, less for sandbanks
+    const count = Math.floor((area / (isCoast ? 2000 : 4000)) * (0.8 + rng() * 0.4));
+    
+    for (let i = 0; i < count; i++) {
+      let attempts = 0;
+      while (attempts < 10) {
+        const x = bb.minX + rng() * (bb.maxX - bb.minX);
+        const y = bb.minY + rng() * (bb.maxY - bb.minY);
+
+        if (pointInPoly(x, y, sb.poly)) {
+          let asset = '';
+          let scale = 0.8 + rng() * 0.4;
+          
+          if (isCoast) {
+            const roll = rng();
+            if (!lighthousePlaced && roll < 0.02) {
+              asset = DECORATION_ASSETS.house;
+              scale = 1.2;
+              lighthousePlaced = true;
+            } else if (roll < 0.5) {
+              asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
+            } else if (roll < 0.7) {
+              asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+            } else if (roll < 0.85) {
+              asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+            } else if (roll < 0.95) {
+              asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
+              scale = 0.9 + rng() * 0.5;
+            } else {
+              asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+              scale = 0.3 + rng() * 0.2;
+            }
+          } else {
+            // Inner sandbanks: mostly pebbles and stones, few shells
+            const roll = rng();
+            if (roll < 0.6) {
+              asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+            } else if (roll < 0.9) {
+              asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+            } else {
+              asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+              scale = 0.3 + rng() * 0.2;
+            }
+          }
+
+          if (asset) {
+            sb.decorations.push({
+              asset,
+              x,
+              y,
+              scale,
+              rotation: rng() * Math.PI * 2,
+              mirrored: rng() > 0.5,
+            });
+          }
+          break;
+        }
+        attempts++;
+      }
+    }
+  }
+}
 
 export function createMap(seed: number): Sandbank[] {
   const rng = mulberry32(seed);
@@ -203,6 +285,8 @@ export function createMap(seed: number): Sandbank[] {
       takenAreas.push({x, y, rx, ry});
     }
   }
+
+  populateDecorations(sandbanks, rng);
 
   return sandbanks;
 }

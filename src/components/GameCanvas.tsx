@@ -285,6 +285,20 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   const bob = Math.sin(phase * 2) * 2;
   const anim = Math.sin(phase * 2.2) * (whale.state === 'stranded' ? 0.2 : 1);
 
+  // Pectoral fins (flippers)
+  ctx.fillStyle = '#2c3e50';
+  ctx.beginPath();
+  ctx.moveTo(-10, 10 + bob);
+  ctx.bezierCurveTo(-30, 35 + bob, -25, 45 + bob, 0, 30 + bob);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-10, -10 - bob);
+  ctx.bezierCurveTo(-30, -35 - bob, -25, -45 - bob, 0, -30 - bob);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main body
   ctx.fillStyle = '#1f2937';
   ctx.beginPath();
   ctx.ellipse(0, bob, 48, 22, 0, 0, Math.PI * 2);
@@ -294,6 +308,21 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.ellipse(-4, 8 + bob, 38, 12, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Throat pleats/grooves
+  ctx.strokeStyle = '#b0b8c0';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  for (let i = -8; i <= 8; i += 4) {
+    if (i === 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(10, 8 + bob + i);
+    ctx.bezierCurveTo(0, 8 + bob + i, -15, 10 + bob + i*1.2, -30, 10 + bob + i);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+
+  // Tail (fluke)
   ctx.fillStyle = '#1f2937';
   ctx.beginPath();
   ctx.moveTo(-46, bob);
@@ -302,6 +331,20 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.bezierCurveTo(-58, 14 + bob, -55, 8 + bob, -46, bob);
   ctx.closePath();
   ctx.fill();
+
+  // Head with tubercles (bumps)
+  ctx.fillStyle = '#1f2937';
+  ctx.beginPath();
+  ctx.arc(38, -2, 14, 0, Math.PI * 2);
+  ctx.fill();
+  for (let i = 0; i < 5; i++) {
+    const angle = -0.8 + i * 0.4;
+    const r = 14;
+    ctx.beginPath();
+    ctx.arc(38 + Math.cos(angle) * r, -2 + Math.sin(angle) * r, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
 
   let mouthY = 2;
   let eyeBrowTranslate = 2;

@@ -140,7 +140,7 @@ export function GameCanvas({ state }: Props) {
           ctx.rotate(dec.rotation);
           if (dec.mirrored) ctx.scale(-1, 1);
           ctx.scale(dec.scale, dec.scale);
-          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+          ctx.drawImage(img, -img.width / 2, -img.height);
           ctx.restore();
         }
 

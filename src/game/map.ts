@@ -159,13 +159,13 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
 
         if (pointInPoly(x, y, sb.poly)) {
           let asset = '';
-          let scale = 0.05 + rng() * 0.02; // Roughly 5% of previous size (which was ~1.0)
+          let scale = 0.12 + rng() * 0.05; // 2x-3x larger than previous 0.05-0.07
           
           if (isCoast) {
             const roll = rng();
             if (!lighthousePlaced && roll < 0.01) {
               asset = DECORATION_ASSETS.house;
-              scale = 0.08; // Even smaller lighthouse
+              scale = 0.2; // 2x-3x larger than 0.08
               lighthousePlaced = true;
             } else if (roll < 0.5) {
               asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
@@ -175,10 +175,10 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
               asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
             } else if (roll < 0.95) {
               asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
-              scale = 0.08 + rng() * 0.04;
+              scale = 0.2 + rng() * 0.1;
             } else {
               asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.03 + rng() * 0.02;
+              scale = 0.08 + rng() * 0.04;
             }
           } else {
             // Inner sandbanks: mostly pebbles and stones, few shells
@@ -189,7 +189,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
               asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
             } else {
               asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.02 + rng() * 0.01;
+              scale = 0.05 + rng() * 0.03;
             }
           }
 

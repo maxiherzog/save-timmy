@@ -253,7 +253,6 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   }
 
   // PLAYING
-  const isImposter = role?.role === 'imposter';
   const pkUsed = me?.pressConferenceUsed;
   const stamina = me?.boat.trampelnStamina ?? 100;
   const staminaFrac = Math.max(0, Math.min(1, stamina / 100));
@@ -277,18 +276,6 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
           <div className="text-xs opacity-90 truncate text-white/80">{c.name}</div>
         </div>
       </div>
-
-      {/* Role banner */}
-      <div
-        className={`px-4 py-1.5 text-center text-sm font-bold ${
-          isImposter
-            ? 'bg-red-500 text-white'
-            : 'bg-green-500 text-white'
-        }`}
-      >
-        {isImposter ? '🤫 SABOTEUR' : '🐋 RETTER'}
-      </div>
-      
       {/* Controls */}
       <div className="flex-1 grid grid-cols-2 gap-3 p-4">
         <div className="flex items-center justify-center">

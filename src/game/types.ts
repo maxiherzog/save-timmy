@@ -129,5 +129,6 @@ export const TRAMPELN_REGEN = 10;
 export const MAP_W = 1600;
 export const MAP_H = 900;
 export const WHALE_MAX_HP = 65;
+export const HEAL_RATE_PER_SEC = 4.5;
 export const BARGE_DRIFT_INTERVAL = 45;
 export const BARGE_DRIFT_DURATION = 6;

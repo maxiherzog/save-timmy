@@ -3,7 +3,7 @@ import type { GameState } from '../game/types';
 import { MAP_W, MAP_H, HEAL_ZONES } from '../game/map';
 import { Heart } from 'lucide-react';
 import { characterById } from '../game/characters';
-import { WHALE_MAX_HP } from '../game/types';
+import { WHALE_MAX_HP, HEAL_RATE_PER_SEC } from '../game/types';
 import starsSvg from '../assets/stars.svg';
 
 const starsImg = new Image();
@@ -81,7 +81,7 @@ export function GameCanvas({ state }: Props) {
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.font = '600 16px "Comic Neue", system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('Bagger-Rinne', z.x + z.w / 2, z.y + z.h / 2 + 5);
+        ctx.fillText(`Bagger-Rinne (+${HEAL_RATE_PER_SEC} HP/s)`, z.x + z.w / 2, z.y + z.h / 2 + 5);
       }
 
       // Sandbanks
@@ -173,7 +173,6 @@ export function GameCanvas({ state }: Props) {
         ctx.save();
         ctx.translate(w.x, w.y);
         ctx.rotate(w.heading);
-        ctx.globalAlpha = w.hp < 30 ? 0.6 : w.hp < 15 ? 0.35 : 1;
         drawWhale(ctx, w, whalePhase);
         ctx.restore();
 

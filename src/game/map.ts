@@ -13,6 +13,36 @@ function mulberry32(seed: number) {
   };
 }
 
+// Simple 2D noise implementation for patchy distribution
+function noise2D(x: number, y: number, seed: number) {
+  const lerp = (a: number, b: number, t: number) => a + t * (b - a);
+  const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+  
+  const hash = (ix: number, iy: number) => {
+    const h = seed ^ (ix * 374761393) ^ (iy * 668265263);
+    return (Math.sin(h) * 10000) % 1;
+  };
+
+  const X = Math.floor(x);
+  const Y = Math.floor(y);
+  const xf = x - X;
+  const yf = y - Y;
+
+  const u = fade(xf);
+  const v = fade(yf);
+
+  const n00 = hash(X, Y);
+  const n10 = hash(X + 1, Y);
+  const n01 = hash(X, Y + 1);
+  const n11 = hash(X + 1, Y + 1);
+
+  return lerp(
+    lerp(n00, n10, u),
+    lerp(n01, n11, u),
+    v
+  );
+}
+
 function organicBlob(
   cx: number,
   cy: number,
@@ -140,7 +170,7 @@ const DECORATION_ASSETS = {
   house: 'lighthouse1.png',
 };
 
-function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
+function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: number) {
   let lighthousePlaced = false;
 
   for (const sb of sandbanks) {
@@ -148,8 +178,8 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
     const bb = bbox(sb.poly);
     const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
     
-    // Toned down density for "patches" feel
-    const count = Math.floor((area / (isCoast ? 500 : 1000)) * (0.8 + rng() * 0.4));
+    // Reduce total amount by 30% (from area/500 to area/700 approx)
+    const count = Math.floor((area / (isCoast ? 700 : 1400)) * (0.8 + rng() * 0.4));
     
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -158,43 +188,66 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
         if (pointInPoly(x, y, sb.poly)) {
+          // Patchy distribution using noise
+          // Different frequencies for foliage and stones
+          const foliageNoise = noise2D(x * 0.005, y * 0.005, seed);
+          const stoneNoise = noise2D(x * 0.01, y * 0.01, seed + 123);
+
           let asset = '';
-          let scale = 0.12 + rng() * 0.05; // 2x-3x larger than previous 0.05-0.07
+          let scale = 0.12 + rng() * 0.05;
           
           if (isCoast) {
             const roll = rng();
             if (!lighthousePlaced && roll < 0.01) {
               asset = DECORATION_ASSETS.house;
-              scale = 0.2; // 2x-3x larger than 0.08
+              scale = 0.2;
               lighthousePlaced = true;
             } else if (roll < 0.5) {
-              asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
+              // Only place foliage if noise is high (patchy)
+              if (foliageNoise > 0.4) {
+                asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
+              }
             } else if (roll < 0.7) {
-              asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+              // Stones also patchy but different map
+              if (stoneNoise > 0.5) {
+                asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+              }
             } else if (roll < 0.85) {
-              asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+              if (stoneNoise > 0.6) {
+                asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+              }
             } else if (roll < 0.95) {
-              asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
-              scale = 0.2 + rng() * 0.1;
+              // Trees are very picky about noise (small, dense patches)
+              if (foliageNoise > 0.7) {
+                asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
+                scale = 0.2 + rng() * 0.1;
+              }
             } else {
-              asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.08 + rng() * 0.04;
+              if (stoneNoise > 0.7) {
+                asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+                scale = 0.08 + rng() * 0.04;
+              }
             }
           } else {
             // Inner sandbanks: mostly pebbles and stones, few shells
             const roll = rng();
             if (roll < 0.6) {
-              asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+              if (stoneNoise > 0.5) {
+                asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
+              }
             } else if (roll < 0.9) {
-              asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+              if (stoneNoise > 0.6) {
+                asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+              }
             } else {
-              asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.05 + rng() * 0.03;
+              if (stoneNoise > 0.7) {
+                asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+                scale = 0.05 + rng() * 0.03;
+              }
             }
           }
 
           if (asset) {
-            // Max 2 degrees rotation = 2 * Math.PI / 180 = ~0.035 rad
             const maxRot = 2 * (Math.PI / 180);
             sb.decorations.push({
               asset,
@@ -214,6 +267,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
 }
 
 export function createMap(seed: number): Sandbank[] {
+
   const rng = mulberry32(seed);
   const sandbanks: Sandbank[] = [];
 
@@ -288,7 +342,7 @@ export function createMap(seed: number): Sandbank[] {
     }
   }
 
-  populateDecorations(sandbanks, rng);
+  populateDecorations(sandbanks, rng, seed);
 
   return sandbanks;
 }

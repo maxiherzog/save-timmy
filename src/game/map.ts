@@ -1,4 +1,4 @@
-import type { Sandbank, Barge, HealZone, MapDecoration } from './types';
+import type { Sandbank, Barge, HealZone } from './types';
 import { MAP_W, MAP_H } from './types';
 
 // Simple deterministic PRNG so the map looks the same for everyone
@@ -129,33 +129,18 @@ const SANDBANK_NAMES = [
   'Fehmarn Belt Bank', 'Grömitzer Düne', 'Kellenhusen Riff'
 ];
 
-export function createMap(seed: number): { sandbanks: Sandbank[], decorations: MapDecoration[] } {
+export function createMap(seed: number): Sandbank[] {
   const rng = mulberry32(seed);
   const sandbanks: Sandbank[] = [];
-  const decorations: MapDecoration[] = [];
 
   // 1. Continuous coastline around the entire map (creating an invisible wall of sand)
-  const wallThickness = 70;
-  const wallVariance = 30;
+  const wallThickness = 40; // Reduced thickness
+  const wallVariance = 15; // Reduced variance for smoother coastline
   
   sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-  
-  const bottomCoast = makeCoastBank('bottom', 0, MAP_W, wallThickness + 40, wallThickness + 80, rng);
-  sandbanks.push(bottomCoast);
-
+  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
   sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
   sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-
-  // Add decorations to the wider southern coastline
-  for (let i=0; i < 25; i++) {
-    const x = rng() * MAP_W;
-    const y = bottomCoast.y + (rng() - 0.5) * 40 - bottomCoast.ry;
-    if (pointInSandbank(x, y, bottomCoast)) {
-      decorations.push({ kind: 'tree', x, y });
-    }
-  }
-  decorations.push({ kind: 'lighthouse', x: MAP_W - 120, y: bottomCoast.y - bottomCoast.ry });
-
 
   // 2. Generate random inner sandbanks
   const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks
@@ -214,18 +199,12 @@ export function createMap(seed: number): { sandbanks: Sandbank[], decorations: M
 
     if (!overlaps) {
       const name = availableNames.pop() || '';
-      sandbanks.push(makeBank(x, y, rx, ry, name, rng, 0.3 + rng()*0.15));
+      sandbanks.push(makeBank(x, y, rx, ry, name, rng, 0.2 + rng()*0.1)); // Reduced jitter for smoother shapes
       takenAreas.push({x, y, rx, ry});
     }
   }
-  
-  // Add seals to one of the sandbanks
-  const sealBank = sandbanks.find(sb => sb.name !== '');
-  if (sealBank) {
-    sealBank.hasSeals = true;
-  }
 
-  return { sandbanks, decorations };
+  return sandbanks;
 }
 
 export const HEAL_ZONES: HealZone[] = [

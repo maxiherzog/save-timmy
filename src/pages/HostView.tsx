@@ -137,8 +137,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
     const readyCount = players.filter((p) => p.ready).length;
     const waiting = state.phase === 'ready';
     const countdown = state.phase === 'countdown';
-    const timeLeft = Math.ceil(state.countdownUntil - performance.now() / 1000);
-
+    const timeLeft = Math.max(0, Math.ceil(state.countdownUntil - performance.now() / 1000));
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <div className="text-center">
@@ -186,6 +185,16 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
       <div className="absolute inset-0">
         <GameCanvas state={state} />
       </div>
+      
+      {(state.phase === 'countdown' as any) && (
+        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20">
+          <div className="text-4xl font-bold mb-4">Das Spiel beginnt!</div>
+          <div className="text-8xl font-black">
+             {Math.max(0, Math.ceil(state.countdownUntil - performance.now() / 1000))}
+          </div>
+        </div>
+      )}
+
       <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 max-w-xs">
         <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-semibold">Spieler</div>
         <div className="space-y-1.5">

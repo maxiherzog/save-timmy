@@ -193,7 +193,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     
     if (allReady) {
       s.phase = 'countdown'; 
-      s.countdownUntil = performance.now() / 1000 + 4; // 3 second countdown + 1 second buffer
+      s.countdownUntil = performance.now() / 1000 + 3; // 3 second countdown
     }
   }
 

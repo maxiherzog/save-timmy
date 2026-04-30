@@ -267,6 +267,8 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         attempts++;
       }
     }
+    // Sort decorations by Y coordinate to ensure correct layering (Y-sorting)
+    sb.decorations.sort((a, b) => a.y - b.y);
   }
 }
 

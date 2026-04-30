@@ -85,10 +85,11 @@ function handleBargeCollision(entity: {x: number, y: number}, radius: number, st
     const distBottom = (b.y + b.h) - (entity.y - radius);
     
     const min = Math.min(distLeft, distRight, distTop, distBottom);
-    if (min === distLeft) entity.x = b.x - radius;
-    else if (min === distRight) entity.x = b.x + b.w + radius;
-    else if (min === distTop) entity.y = b.y - radius;
-    else entity.y = b.y + b.h + radius;
+    const PUSH_OFFSET = 10;
+    if (min === distLeft) entity.x = b.x - radius - PUSH_OFFSET;
+    else if (min === distRight) entity.x = b.x + b.w + radius + PUSH_OFFSET;
+    else if (min === distTop) entity.y = b.y - radius - PUSH_OFFSET;
+    else entity.y = b.y + b.h + radius + PUSH_OFFSET;
   }
 }
 
@@ -188,8 +189,8 @@ function updateWhale(state: GameState, dt: number) {
 
   w.wanderTimer -= dt;
   if (w.wanderTimer <= 0) {
-    w.wanderTimer = 3 + Math.random() * 2;
-    w.wanderHeading += (Math.random() - 0.5) * 0.5;
+    w.wanderTimer = 1.5 + Math.random() * 1.5;
+    w.wanderHeading += (Math.random() - 0.5) * 1.5;
   }
 
   if (w.state !== 'stranded') {

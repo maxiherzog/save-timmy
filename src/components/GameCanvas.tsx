@@ -132,6 +132,11 @@ export function GameCanvas({ state }: Props) {
       const drifting = s.bargeDrift && performance.now() / 1000 < s.bargeDrift.driftingUntil;
       ctx.fillStyle = '#3a2418';
       ctx.fillRect(b.x, b.y, b.w, b.h);
+      
+      // Draw opening
+      ctx.fillStyle = '#075985'; // Same as water
+      ctx.fillRect(b.x - 5, b.openingY, 10, b.openingSize);
+
       ctx.fillStyle = '#1a3a50';
       ctx.fillRect(b.x + 14, b.y + 14, b.w - 28, b.h - 28);
       ctx.fillStyle = '#0ea5a0';

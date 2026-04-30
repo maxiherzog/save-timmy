@@ -17,9 +17,16 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   const [hupenFlash, setHupenFlash] = useState(false);
   const [trampelnFlash, setTrampelnFlash] = useState(false);
   const [voted, setVoted] = useState<string | null>(null);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     if (state?.phase !== 'voting') setVoted(null);
+  }, [state?.phase]);
+
+  useEffect(() => {
+    if (state?.phase !== 'countdown') return;
+    const interval = setInterval(() => setTick(t => t + 1), 100);
+    return () => clearInterval(interval);
   }, [state?.phase]);
 
   useEffect(() => {
@@ -259,10 +266,10 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   }
 
   if (state.phase === 'countdown') {
-    const timeLeft = Math.ceil(state.countdownUntil - performance.now() / 1000);
+    const timeLeft = Math.max(0, Math.ceil(state.countdownUntil - performance.now() / 1000));
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center text-center p-4 bg-slate-900 text-white">
-        <div className="text-2xl font-bold mb-4">Das Spiel beginnt in...</div>
+        <div className="text-2xl font-bold mb-4">Es geht gleich los...</div>
         <div className="text-9xl font-black">{timeLeft}</div>
       </div>
     );

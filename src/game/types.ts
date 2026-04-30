@@ -105,7 +105,10 @@ export type GameState = {
   };
   bannerMessage: string;
   bannerUntil: number;
-  fx: Array<{ id: number; kind: 'hupen' | 'trampeln' | 'crash'; x: number; y: number; t: number }>;
+  fx: Array<
+    | { id: number; kind: 'hupen' | 'trampeln' | 'crash'; x: number; y: number; t: number }
+    | { id: number; kind: 'damage'; x: number; y: number; t: number; amount: number }
+  >;
   bargeDrift: {
     nextDriftAt: number;
     driftingUntil: number;

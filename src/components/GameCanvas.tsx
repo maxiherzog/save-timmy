@@ -366,6 +366,21 @@ function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.fill();
       }
       ctx.restore();
+    } else if (fx.kind === 'damage') {
+      const life = Math.max(0, 1 - age / 1.5);
+      ctx.save();
+      ctx.globalAlpha = life;
+      const isHeal = fx.amount > 0;
+      ctx.fillStyle = isHeal ? '#4ade80' : '#f87171';
+      ctx.font = '900 24px "Comic Neue", system-ui';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+      ctx.lineWidth = 4;
+      const text = `${isHeal ? '+' : ''}${Math.round(fx.amount * 10) / 10}`;
+      const yOff = -40 - age * 60;
+      ctx.strokeText(text, fx.x, fx.y + yOff);
+      ctx.fillText(text, fx.x, fx.y + yOff);
+      ctx.restore();
     }
   }
 }

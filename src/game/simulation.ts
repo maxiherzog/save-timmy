@@ -181,6 +181,8 @@ function updateWhale(state: GameState, dt: number) {
   const w = state.whale;
   if (w.state === 'dead') return;
 
+  const hpBefore = w.hp;
+
   w.soundCooldown -= dt;
   if (w.soundCooldown <= 0) {
     w.soundCooldown = 8 + Math.random() * 10;
@@ -279,6 +281,17 @@ function updateWhale(state: GameState, dt: number) {
   }
 
   w.hp = Math.max(0, Math.min(WHALE_MAX_HP, w.hp));
+  const hpChange = w.hp - hpBefore;
+  if (Math.abs(hpChange) > 0.05) {
+    state.fx.push({
+      id: fxIdCounter++,
+      kind: 'damage',
+      x: w.x + (Math.random() - 0.5) * 80,
+      y: w.y - 20 + (Math.random() - 0.5) * 40,
+      t: performance.now() / 1000,
+      amount: hpChange,
+    });
+  }
   handleBargeCollision(w, WHALE_RADIUS, state);
 }
 

@@ -3,6 +3,10 @@ import type { GameState } from '../game/types';
 import { MAP_W, MAP_H, HEAL_ZONES } from '../game/map';
 import { characterById } from '../game/characters';
 import { WHALE_MAX_HP } from '../game/types';
+import starsSvg from '../assets/stars.svg';
+
+const starsImg = new Image();
+starsImg.src = starsSvg;
 
 type Props = { state: GameState };
 
@@ -255,11 +259,9 @@ export function GameCanvas({ state }: Props) {
 
         if (isStunned) {
           ctx.save();
-          ctx.translate(p.boat.x, p.boat.y - 25);
+          ctx.translate(p.boat.x, p.boat.y - 30);
           ctx.rotate(now * 5);
-          ctx.font = '20px "Comic Neue", system-ui';
-          ctx.textAlign = 'center';
-          ctx.fillText('💫', 0, 0);
+          ctx.drawImage(starsImg, -16, -16, 32, 32);
           ctx.restore();
         }
 

@@ -19,6 +19,7 @@ export function createInitialWhale(): Whale {
     soundCooldown: 5,
     panicTimer: 0,
     ignoreBanksUntil: 7, // 7 seconds grace period
+    accumulatedDamage: 0,
   };
 }
 
@@ -329,16 +330,21 @@ function updateWhale(state: GameState, dt: number) {
 
   w.hp = Math.max(0, Math.min(WHALE_MAX_HP, w.hp));
   const hpChange = w.hp - hpBefore;
-  if (Math.abs(hpChange) > 0.05) {
+  
+  w.accumulatedDamage += hpChange;
+
+  if (Math.abs(w.accumulatedDamage) >= 1) {
     state.fx.push({
       id: fxIdCounter++,
       kind: 'damage',
       x: w.x + (Math.random() - 0.5) * 80,
       y: w.y - 20 + (Math.random() - 0.5) * 40,
       t: performance.now() / 1000,
-      amount: hpChange,
+      amount: w.accumulatedDamage,
     });
+    w.accumulatedDamage = 0;
   }
+  
   handleBargeCollision(w, WHALE_RADIUS, state);
 }
 

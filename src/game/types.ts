@@ -42,6 +42,7 @@ export type Whale = {
   soundCooldown: number;
   panicTimer: number;
   ignoreBanksUntil: number;
+  accumulatedDamage: number;
 };
 
 export type Sandbank = {

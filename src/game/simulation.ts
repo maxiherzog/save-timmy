@@ -218,6 +218,22 @@ function updateWhale(state: GameState, dt: number) {
   if (w.soundCooldown <= 0) {
     w.soundCooldown = 8 + Math.random() * 10;
     playWhaleSound(0.5 + w.hp / WHALE_MAX_HP * 0.5);
+    
+    // Create blow/fountain effect and push nearby boats
+    state.fx.push({ id: fxIdCounter++, kind: 'blow', x: w.x, y: w.y, t: performance.now() / 1000 });
+    for (const p of Object.values(state.players)) {
+      if (!p.boat.alive) continue;
+      const dx = p.boat.x - w.x;
+      const dy = p.boat.y - w.y;
+      const distSq = dx * dx + dy * dy;
+      const blowRadius = 250;
+      if (distSq < blowRadius * blowRadius && distSq > 1) {
+        const dist = Math.sqrt(distSq);
+        const pushForce = 300 * (1 - dist / blowRadius);
+        p.boat.vx += (dx / dist) * pushForce;
+        p.boat.vy += (dy / dist) * pushForce;
+      }
+    }
   }
 
   w.panicTimer = Math.max(0, w.panicTimer - dt);
@@ -322,6 +338,21 @@ function updateWhale(state: GameState, dt: number) {
       p.boat.trampelnStamina = Math.max(0, p.boat.trampelnStamina - TRAMPELN_COST);
       applyPush(w, p.boat.x, p.boat.y, 380 * (0.5 + 0.5 * stamFrac), 0.4 * stamFrac);
       state.fx.push({ id: fxIdCounter++, kind: 'trampeln', x: p.boat.x, y: p.boat.y, t: performance.now() / 1000 });
+      
+      // Also push other boats slightly when trampeling
+      for (const otherP of Object.values(state.players)) {
+        if (!otherP.boat.alive || otherP.id === p.id) continue;
+        const bdx = otherP.boat.x - p.boat.x;
+        const bdy = otherP.boat.y - p.boat.y;
+        const bDistSq = bdx * bdx + bdy * bdy;
+        const trampelRadius = 380 * (0.5 + 0.5 * stamFrac);
+        if (bDistSq < trampelRadius * trampelRadius && bDistSq > 1) {
+           const bDist = Math.sqrt(bDistSq);
+           const pushF = 150 * (1 - bDist / trampelRadius) * stamFrac;
+           otherP.boat.vx += (bdx / bDist) * pushF;
+           otherP.boat.vy += (bdy / bDist) * pushF;
+        }
+      }
     }
     if (pointInHealZone(w.x, w.y)) {
       p.boat.stats.healTime += dt;

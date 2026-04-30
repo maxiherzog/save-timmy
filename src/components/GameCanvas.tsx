@@ -321,18 +321,27 @@ export function GameCanvas({ state }: Props) {
 
 function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], phase: number) {
   const bob = Math.sin(phase * 2) * 2;
+  const swimAnim = Math.sin(phase * 3) * (whale.state === 'stranded' ? 0 : 1);
+  const isPanicked = whale.panicTimer > 0;
+  
+  // Blink every 3-5 seconds
+  const isBlinking = Math.sin(phase * 1.5) > 0.98 || Math.sin(phase * 2.1) > 0.98;
 
-  // Tail (fluke) - longer and more prominent
+  // Tail (fluke) - longer and more prominent, animated
+  ctx.save();
+  ctx.translate(-40, bob);
+  ctx.rotate(swimAnim * 0.15); // Tail wag
   ctx.fillStyle = '#a8b6c4';
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-40, bob);
-  ctx.bezierCurveTo(-60, -5 + bob, -70, -20 + bob, -80, -25 + bob); // Top fluke tip
-  ctx.bezierCurveTo(-72, -10 + bob, -72, 10 + bob, -80, 25 + bob); // Bottom fluke tip
-  ctx.bezierCurveTo(-70, 20 + bob, -60, 5 + bob, -40, bob);
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(-20, -5 + swimAnim * 5, -30, -20, -40, -25); // Top fluke tip
+  ctx.bezierCurveTo(-32, -10, -32, 10, -40, 25); // Bottom fluke tip
+  ctx.bezierCurveTo(-30, 20, -20, 5 - swimAnim * 5, 0, 0);
   ctx.fill();
   ctx.stroke();
+  ctx.restore();
 
   // Back Fin (Dorsal)
   ctx.beginPath();
@@ -341,6 +350,8 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.fill();
   ctx.stroke();
 
+  // Flipper (Pectoral fin) - Bottom/Back one (if we wanted true 3D, but we draw it over the body)
+  
   // Main body (cute ellipse)
   ctx.fillStyle = '#a8b6c4';
   ctx.beginPath();
@@ -373,17 +384,21 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.moveTo(-10, 20 + bob); ctx.quadraticCurveTo(0, 25 + bob, 20, 20 + bob);
   ctx.stroke();
 
-  // Flipper (Pectoral fin)
+  // Flipper (Pectoral fin) - animated
+  ctx.save();
+  ctx.translate(10, 15 + bob); // Pivot point where fin attaches to body
+  ctx.rotate(-swimAnim * 0.2); // Flap animation
   ctx.fillStyle = '#a8b6c4';
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(5, 15 + bob);
-  ctx.bezierCurveTo(-5, 30 + bob, -15, 45 + bob, -5, 40 + bob);
-  ctx.bezierCurveTo(5, 35 + bob, 15, 25 + bob, 15, 15 + bob);
+  ctx.moveTo(-5, 0); // Origin relative to pivot
+  ctx.bezierCurveTo(-15, 15, -25, 30, -15, 25);
+  ctx.bezierCurveTo(-5, 20, 5, 10, 5, 0);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.restore();
 
   // Bumps on face (Tubercles)
   ctx.fillStyle = '#a8b6c4';
@@ -404,14 +419,25 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   // Eye
   const eyeX = 26;
   const eyeY = -4 + bob;
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#1f2937';
-  ctx.beginPath();
-  ctx.arc(eyeX + 1, eyeY, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+  if (isBlinking && !isPanicked && whale.state !== 'dead') {
+    // Closed eye (blink)
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(eyeX - 4, eyeY);
+    ctx.quadraticCurveTo(eyeX, eyeY + 2, eyeX + 4, eyeY);
+    ctx.stroke();
+  } else {
+    // Open eye
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, isPanicked ? 6 : 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1f2937';
+    ctx.beginPath();
+    ctx.arc(eyeX + (isPanicked ? 0 : 1), eyeY, isPanicked ? 2 : 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Emotion / Mouth
   ctx.strokeStyle = '#374151';
@@ -419,21 +445,29 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.lineCap = 'round';
   ctx.beginPath();
   
-  if (whale.state === 'stranded') {
+  if (isPanicked) {
+    // Panic mouth :o
+    ctx.fillStyle = '#1f2937';
+    ctx.beginPath();
+    ctx.ellipse(30, 8 + bob, 3, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (whale.state === 'stranded') {
     // Wiggly mouth ~
     ctx.moveTo(18, 8 + bob);
     ctx.quadraticCurveTo(23, 4 + bob, 28, 8 + bob);
     ctx.quadraticCurveTo(33, 12 + bob, 38, 8 + bob);
+    ctx.stroke();
   } else if (whale.hp < 30) {
     // Sad mouth :(
     ctx.moveTo(22, 10 + bob);
     ctx.quadraticCurveTo(30, 4 + bob, 38, 10 + bob);
+    ctx.stroke();
   } else {
     // Happy mouth :)
     ctx.moveTo(22, 6 + bob);
     ctx.quadraticCurveTo(30, 14 + bob, 38, 6 + bob);
+    ctx.stroke();
   }
-  ctx.stroke();
 }
 
 function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
@@ -461,6 +495,41 @@ function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
         const size = 3 + (1 - life) * 8;
         ctx.arc(fx.x + Math.cos(angle) * dist, fx.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
         ctx.fill();
+      }
+      ctx.restore();
+    } else if (fx.kind === 'blow') {
+      ctx.save();
+      const progress = age / 1.5; // Lasts 1.5 seconds
+      if (progress < 1) {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.fillStyle = '#bae6fd'; // Water color
+        
+        // Draw multiple droplets
+        for (let i = 0; i < 15; i++) {
+          const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.5; // Spray upwards
+          const speed = 40 + Math.random() * 80;
+          const gravity = 120;
+          
+          const dx = Math.cos(angle) * speed * age;
+          const dy = Math.sin(angle) * speed * age + 0.5 * gravity * age * age; // Parabolic trajectory
+          
+          ctx.beginPath();
+          ctx.arc(fx.x + dx, fx.y + dy - 20, 2 + Math.random() * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    } else if (fx.kind === 'trampeln') {
+      ctx.save();
+      const progress = age / 0.8;
+      if (progress < 1) {
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 6 * (1 - progress);
+        ctx.beginPath();
+        // Draw a growing wave ring
+        ctx.arc(fx.x, fx.y, 40 + progress * 150, 0, Math.PI * 2);
+        ctx.stroke();
       }
       ctx.restore();
     } else if (fx.kind === 'damage') {

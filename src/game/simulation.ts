@@ -174,7 +174,8 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
   boat.trampelnStamina = Math.min(TRAMPELN_STAMINA_MAX, boat.trampelnStamina + TRAMPELN_REGEN * dt);
   // 5. Wakes
   if (currentSpeed > 30 && Math.random() < 0.15) {
-    state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x - Math.cos(boat.heading) * 20, y: boat.y - Math.sin(boat.heading) * 20, t: now, heading: boat.heading });
+    // Spawn at the nose
+    state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x + Math.cos(boat.heading) * 20, y: boat.y + Math.sin(boat.heading) * 20, t: now, heading: boat.heading });
   }
 
   handleBargeCollision(boat, BOAT_RADIUS, state);
@@ -317,8 +318,8 @@ function updateWhale(state: GameState, dt: number) {
     
     // Wakes
     if (baseSpeed > 5 && Math.random() < 0.1) {
-      // Spawn closer to the center of the whale
-      state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x - Math.cos(w.heading) * 20, y: w.y - Math.sin(w.heading) * 20, t: performance.now() / 1000, heading: w.heading });
+      // Spawn at the nose
+      state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x + Math.cos(w.heading) * 40, y: w.y + Math.sin(w.heading) * 40, t: performance.now() / 1000, heading: w.heading });
     }
   }
   

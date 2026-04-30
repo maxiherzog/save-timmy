@@ -186,7 +186,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
     const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
     
     // Increase potential placements to allow the probability filter to work
-    const count = Math.floor((area / (isCoast ? 600 : 1200)) * (0.8 + rng() * 0.4));
+    const count = Math.floor((area / (isCoast ? 1000 : 2000)) * (0.8 + rng() * 0.4));
     
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -195,11 +195,11 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
         if (pointInPoly(x, y, sb.poly)) {
-          let foliageNoise = noise2D(x * 0.01, y * 0.01, seed);
+          let foliageNoise = noise2D(x * 0.02, y * 0.02, seed);
           // Bias foliage downwards (y increases downwards)
           foliageNoise *= (0.5 + (y / MAP_H) * 1.0); 
           
-          let stoneNoise = noise2D(x * 0.02, y * 0.02, seed + 123);
+          let stoneNoise = noise2D(x * 0.04, y * 0.04, seed + 123);
           // Slightly reduce stone frequency near the bottom to let trees shine
           if (y > MAP_H * 0.7) stoneNoise *= 0.7;
 

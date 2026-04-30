@@ -75,11 +75,11 @@ export function GameCanvas({ state }: Props) {
       // ambient waves
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 1;
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 150; i++) {
         const x = (whalePhase * 20 + i * 137) % MAP_W;
         const y = (whalePhase * 15 + i * 193) % MAP_H;
         ctx.beginPath();
-        ctx.arc(x, y, 5 + Math.sin(whalePhase * 2 + i) * 2, 0, Math.PI);
+        ctx.arc(x, y, 5 + Math.sin(whalePhase * 3 + i) * 3, 0, Math.PI);
         ctx.stroke();
       }
       
@@ -120,9 +120,9 @@ export function GameCanvas({ state }: Props) {
           for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
           ctx.closePath();
           // Per-bank pulsing phase
-          const bankPhase = whalePhase * 2 + (sb.x + sb.y) * 0.05;
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.sin(bankPhase) * 0.1})`;
-          ctx.lineWidth = 6 + Math.sin(bankPhase * 0.5) * 4;
+          const bankPhase = whalePhase * 1.5 + (sb.x * 0.1 + sb.y * 0.2);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(bankPhase) * 0.2})`;
+          ctx.lineWidth = 8 + Math.sin(bankPhase * 0.8) * 6;
           ctx.stroke();
           ctx.restore();
 
@@ -540,14 +540,15 @@ function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
     const age = now - fx.t;
     if (fx.kind === 'wake') {
       ctx.save();
-      ctx.globalAlpha = Math.max(0, 0.4 - age * 0.4);
+      ctx.globalAlpha = Math.max(0, 0.6 - age * 0.2); // Lasts longer, fades slower
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.translate(fx.x, fx.y);
       ctx.rotate(fx.heading! + Math.PI / 2);
       
-      const spread = age * 40;
-      const length = 10 + age * 20;
+      // Expand V shape faster/larger
+      const spread = age * 60;
+      const length = 20 + age * 40;
       
       ctx.beginPath();
       ctx.moveTo(-spread, -length);

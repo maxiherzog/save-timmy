@@ -111,13 +111,13 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
     steering = Math.max(-1, Math.min(1, input.joystickX));
   }
 
-  const BOAT_ENGINE_FORCE = 160; // Reduced from 400 for slower, more realistic acceleration
-  const BOAT_TURN_SPEED = 2.5;
+  const BOAT_ENGINE_FORCE = 80; // Reduced from 160 for even slower boats
+  const BOAT_TURN_SPEED = 2.0; // Slightly reduced turn speed to match slower velocity
 
   // 2. Turning
   const currentSpeed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
   // Turn speed is proportional to how fast we are moving, with a small base turn rate to allow turning from a standstill
-  const turnFactor = Math.min(1, currentSpeed / 40 + 0.2); // Adjusted for lower top speed
+  const turnFactor = Math.min(1, currentSpeed / 25 + 0.3); // Adjusted for lower top speed
   boat.heading += steering * BOAT_TURN_SPEED * turnFactor * dt;
 
   // 3. Engine Force

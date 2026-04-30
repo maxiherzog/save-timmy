@@ -258,31 +258,12 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     );
   }
 
-  if (state.phase === 'ended') {
-    const e = state.ended!;
-    const isImposter = role?.role === 'imposter';
-    const iWon = (isImposter && e.winner === 'imposter') || (!isImposter && e.winner === 'rescuers');
+  if (state.phase === 'countdown') {
+    const timeLeft = Math.ceil(state.countdownUntil - performance.now() / 1000);
     return (
-      <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center`}>
-        <div className={`text-5xl font-bold mb-4 ${iWon ? 'text-green-500' : 'text-red-500'}`}>
-          {iWon ? 'SIEG!' : 'NIEDERLAGE'}
-        </div>
-        <div className="text-slate-600 max-w-sm mb-8">
-          {e.imposterIds.length > 1 ? 'Die Saboteure waren ' : 'Der Saboteur war '}
-          <span className="font-bold text-slate-800">
-            {e.imposterCharacters.map(c => characterById(c).name).join(', ')}
-          </span>
-          {' '}(<span className="font-bold">{e.imposterNames.join(', ')}</span>).
-        </div>
-        <div className="text-sm text-slate-500">
-          Warte, bis der Host eine neue Runde startet.
-        </div>
-        <button
-          onClick={onLeave}
-          className="mt-6 flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-3 rounded-full transition"
-        >
-          <LogOut className="w-4 h-4" /> Zur Startseite
-        </button>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center text-center p-4 bg-slate-900 text-white">
+        <div className="text-2xl font-bold mb-4">Das Spiel beginnt in...</div>
+        <div className="text-9xl font-black">{timeLeft}</div>
       </div>
     );
   }

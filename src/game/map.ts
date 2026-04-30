@@ -1,4 +1,4 @@
-import type { Sandbank, Barge, HealZone } from './types';
+import type { Sandbank, Barge, HealZone, MapDecoration } from './types';
 import { MAP_W, MAP_H } from './types';
 
 // Simple deterministic PRNG so the map looks the same for everyone
@@ -98,7 +98,7 @@ function bbox(poly: Array<[number, number]>) {
 }
 
 function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, rng: () => number, jitter = 0.35): Sandbank {
-  const poly = organicBlob(cx, cy, rx, ry, 18, jitter, rng);
+  const poly = organicBlob(cx, cy, rx, ry, 32, jitter, rng);
   const bb = bbox(poly);
   return {
     x: cx,
@@ -111,7 +111,7 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
 }
 
 function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, rng: () => number): Sandbank {
-  const poly = coastlinePoly(side, start, end, dMin, dMax, 14, rng);
+  const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng);
   const bb = bbox(poly);
   return {
     x: (bb.minX + bb.maxX) / 2,
@@ -129,18 +129,33 @@ const SANDBANK_NAMES = [
   'Fehmarn Belt Bank', 'Grömitzer Düne', 'Kellenhusen Riff'
 ];
 
-export function createMap(seed: number): Sandbank[] {
+export function createMap(seed: number): { sandbanks: Sandbank[], decorations: MapDecoration[] } {
   const rng = mulberry32(seed);
   const sandbanks: Sandbank[] = [];
+  const decorations: MapDecoration[] = [];
 
   // 1. Continuous coastline around the entire map (creating an invisible wall of sand)
   const wallThickness = 70;
   const wallVariance = 30;
   
   sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+  
+  const bottomCoast = makeCoastBank('bottom', 0, MAP_W, wallThickness + 40, wallThickness + 80, rng);
+  sandbanks.push(bottomCoast);
+
   sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
   sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+
+  // Add decorations to the wider southern coastline
+  for (let i=0; i < 25; i++) {
+    const x = rng() * MAP_W;
+    const y = bottomCoast.y + (rng() - 0.5) * 40 - bottomCoast.ry;
+    if (pointInSandbank(x, y, bottomCoast)) {
+      decorations.push({ kind: 'tree', x, y });
+    }
+  }
+  decorations.push({ kind: 'lighthouse', x: MAP_W - 120, y: bottomCoast.y - bottomCoast.ry });
+
 
   // 2. Generate random inner sandbanks
   const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks
@@ -162,7 +177,7 @@ export function createMap(seed: number): Sandbank[] {
       y = wallThickness + ry + 50 + rng() * (MAP_H - 2 * (wallThickness + ry + 50));
       
       // Keep away from Barge area (bottom right)
-      if (x > MAP_W - 350 && y > MAP_H - 350) {
+      if (x > MAP_W - 450 && y > MAP_H - 450) {
         attempts++;
         continue;
       }
@@ -203,8 +218,14 @@ export function createMap(seed: number): Sandbank[] {
       takenAreas.push({x, y, rx, ry});
     }
   }
+  
+  // Add seals to one of the sandbanks
+  const sealBank = sandbanks.find(sb => sb.name !== '');
+  if (sealBank) {
+    sealBank.hasSeals = true;
+  }
 
-  return sandbanks;
+  return { sandbanks, decorations };
 }
 
 export const HEAL_ZONES: HealZone[] = [

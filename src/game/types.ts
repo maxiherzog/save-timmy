@@ -52,7 +52,12 @@ export type Sandbank = {
   ry: number;
   name: string;
   poly: Array<[number, number]>;
+  hasSeals?: boolean;
 };
+
+export type MapDecoration =
+  | { kind: 'tree'; x: number; y: number }
+  | { kind: 'lighthouse'; x: number; y: number };
 
 export type HealZone = {
   x: number;
@@ -91,12 +96,14 @@ export type VoteState = {
 
 export type GameState = {
   code: string;
-  phase: 'lobby' | 'starting' | 'ready' | 'playing' | 'voting' | 'ended';
+  phase: 'lobby' | 'starting' | 'ready' | 'countdown' | 'playing' | 'voting' | 'ended';
+  countdownUntil: number;
   playTime: number;
   impostersCount: number;
   players: Record<string, Player>;
   whale: Whale;
   sandbanks: Sandbank[];
+  decorations: MapDecoration[];
   healZones: HealZone[];
   barge: Barge;
   vote: VoteState;

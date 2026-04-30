@@ -44,15 +44,17 @@ export function createBoat(index: number, _total: number): Boat {
 
 export function createInitialState(code: string, impostersCount: number = 1): GameState {
   const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const sandbanks = createMap(seed);
+  const { sandbanks, decorations } = createMap(seed);
   return {
     code,
     phase: 'lobby',
     playTime: 0,
+    countdownUntil: 0,
     impostersCount,
     players: {},
     whale: createInitialWhale(),
     sandbanks,
+    decorations,
     healZones: HEAL_ZONES,
     barge: BARGE,
     vote: { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} },
@@ -409,6 +411,12 @@ function updateBargeDrift(state: GameState, dt: number, now: number) {
 }
 
 export function stepSimulation(state: GameState, dt: number, now: number): GameState {
+  if (state.phase === 'countdown' && now >= state.countdownUntil) {
+    state.phase = 'playing';
+    state.playTime = 0;
+    if (state.whale) state.whale.ignoreBanksUntil = now + 7;
+  }
+
   if (state.phase === 'voting' && state.vote.active && now >= state.vote.endsAt) {
     resolveVote(state);
   }

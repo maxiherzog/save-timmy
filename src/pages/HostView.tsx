@@ -133,17 +133,20 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
     );
   }
 
-  if (state.phase === 'starting' || state.phase === 'ready') {
+  if (state.phase === 'starting' || state.phase === 'ready' || state.phase === 'countdown') {
     const readyCount = players.filter((p) => p.ready).length;
     const waiting = state.phase === 'ready';
+    const countdown = state.phase === 'countdown';
+    const timeLeft = Math.ceil(state.countdownUntil - performance.now() / 1000);
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <div className="text-center">
           <div className="text-sm uppercase tracking-widest text-slate-500 mb-4">
-            {waiting ? 'Schaut auf eure Handys' : 'Rollen werden verteilt'}
+            {waiting ? 'Schaut auf eure Handys' : countdown ? 'Spiel startet bald!' : 'Rollen werden verteilt'}
           </div>
           <div className="text-6xl md:text-7xl font-bold mb-2">
-            {waiting ? 'Bereit machen!' : 'Auf geht\u2019s!'}
+            {waiting ? 'Bereit machen!' : countdown ? `${timeLeft}` : 'Auf geht\u2019s!'}
           </div>
           {waiting && (
             <div className="text-xl text-slate-600 mb-8 tabular-nums">
@@ -151,26 +154,28 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mt-6">
-          {players.map((p) => (
-            <div
-              key={p.id}
-              className={`rounded-xl p-4 border-2 flex flex-col items-center transition ${
-                p.ready
-                  ? 'bg-green-50 border-green-500'
-                  : 'bg-white border-slate-200'
-              }`}
-            >
-              <CharacterAvatar characterId={p.characterId} size={56} />
-              <div className="mt-3 font-bold">{p.name}</div>
-              {waiting && (
-                <div className={`mt-2 text-xs font-bold ${p.ready ? 'text-green-600' : 'text-slate-500'}`}>
-                  {p.ready ? 'BEREIT' : 'Wartet...'}
+        {!countdown && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mt-6">
+            {players.map((p) => (
+                <div
+                key={p.id}
+                className={`rounded-xl p-4 border-2 flex flex-col items-center transition ${
+                    p.ready
+                    ? 'bg-green-50 border-green-500'
+                    : 'bg-white border-slate-200'
+                }`}
+                >
+                <CharacterAvatar characterId={p.characterId} size={56} />
+                <div className="mt-3 font-bold">{p.name}</div>
+                {waiting && (
+                    <div className={`mt-2 text-xs font-bold ${p.ready ? 'text-green-600' : 'text-slate-500'}`}>
+                    {p.ready ? 'BEREIT' : 'Wartet...'}
+                    </div>
+                )}
                 </div>
-              )}
+            ))}
             </div>
-          ))}
-        </div>
+        )}
       </div>
     );
   }

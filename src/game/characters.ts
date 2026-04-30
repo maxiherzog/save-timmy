@@ -7,7 +7,9 @@ export type CharacterId =
   | 'lehmann'
   | 'gross'
   | 'partheil'
-  | 'hilse';
+  | 'hilse'
+  | 'bibi'
+  | 'jan';
 
 export type Character = {
   id: CharacterId;
@@ -100,6 +102,24 @@ export const CHARACTERS: Character[] = [
     accent: '#4b5563',
     initials: 'DH',
     quote: 'Ich war dabei!',
+  },
+  {
+    id: 'bibi',
+    name: 'Driver Bibi',
+    title: 'Die Influencerin',
+    color: '#fbcfe8', // pastel pink
+    accent: '#db2777',
+    initials: 'BI',
+    quote: 'OMG, eine real life Whale!',
+  },
+  {
+    id: 'jan',
+    name: 'Jan von der Segelschule',
+    title: 'Der Experte',
+    color: '#a5b4fc', // pastel indigo
+    accent: '#4f46e5',
+    initials: 'JA',
+    quote: 'Das ist ein ganz normaler Prozess in der Natur.',
   },
 ];
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import rudderSvg from '../assets/rudder.svg';
 
 type Props = {
   onChange: (x: number, y: number) => void;
@@ -70,13 +71,13 @@ export function Joystick({ onChange, size = 180 }: Props) {
       style={{ width: size, height: size }}
     >
       <div
-        className="absolute inset-0 flex items-center justify-center text-[100px] origin-center"
+        className="absolute inset-0 flex items-center justify-center origin-center pointer-events-none"
         style={{
           transition: active.current ? 'none' : 'transform 0.2s ease-out',
           transform: `rotate(${rotation}deg)`
         }}
       >
-        <span className="drop-shadow-2xl">☸️</span>
+        <img src={rudderSvg} draggable="false" className="w-[85%] h-[85%] object-contain drop-shadow-2xl opacity-90 filter invert-[0.9]" />
       </div>
     </div>
   );

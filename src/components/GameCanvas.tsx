@@ -213,6 +213,15 @@ export function GameCanvas({ state }: Props) {
         
         const isStunned = now < p.boat.stunnedUntil;
 
+        // Visual Rudder (steering indicator)
+        ctx.save();
+        ctx.translate(-24, 0); // Positioned at the back of the boat
+        // Rotate rudder up to ~45 degrees based on steering input
+        ctx.rotate(p.input.joystickX * 0.8);
+        ctx.fillStyle = '#475569'; // Slate 600
+        ctx.fillRect(-8, -2, 12, 4);
+        ctx.restore();
+
         ctx.globalAlpha = Math.min(0.4, p.boat.speed / 200);
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();

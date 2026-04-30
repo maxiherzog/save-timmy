@@ -65,10 +65,7 @@ export function createInitialState(code: string, impostersCount: number = 1): Ga
 
 let fxIdCounter = 1;
 
-const BOAT_ACCEL = 260;
 const BOAT_MAX_SPEED = 170;
-const BOAT_MIN_SPEED = 20;
-const BOAT_FRICTION = 0.94;
 const BOAT_RADIUS = 20;
 const WHALE_RADIUS = 34;
 
@@ -103,43 +100,65 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
 
   const isStunned = now < boat.stunnedUntil;
 
+  // 1. Inputs
+  let throttle = 0;
+  let steering = 0;
+  
   if (!isStunned) {
-    const ix = Math.max(-1, Math.min(1, input.joystickX));
-    const iy = Math.max(-1, Math.min(1, input.joystickY));
-    const mag = Math.sqrt(ix * ix + iy * iy);
-    if (mag > 0.08) {
-      const nx = ix / Math.max(mag, 1);
-      const ny = iy / Math.max(mag, 1);
-      boat.vx += nx * BOAT_ACCEL * dt;
-      boat.vy += ny * BOAT_ACCEL * dt;
-      boat.heading = Math.atan2(ny, nx);
-    }
-  }
-  boat.vx *= Math.pow(BOAT_FRICTION, dt * 60);
-  boat.vy *= Math.pow(BOAT_FRICTION, dt * 60);
-  const speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
-  if (speed > BOAT_MAX_SPEED) {
-    boat.vx = (boat.vx / speed) * BOAT_MAX_SPEED;
-    boat.vy = (boat.vy / speed) * BOAT_MAX_SPEED;
+    // Throttle UI sends negative Y (up is negative in browser space), so we invert it.
+    throttle = Math.max(0, Math.min(1, -input.joystickY));
+    steering = Math.max(-1, Math.min(1, input.joystickX));
   }
 
+  const BOAT_ENGINE_FORCE = 400;
+  const BOAT_TURN_SPEED = 2.5;
+
+  // 2. Turning
+  const currentSpeed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
+  // Turn speed is proportional to how fast we are moving, with a small base turn rate to allow turning from a standstill
+  const turnFactor = Math.min(1, currentSpeed / 60 + 0.15); 
+  boat.heading += steering * BOAT_TURN_SPEED * turnFactor * dt;
+
+  // 3. Engine Force
+  const force = throttle * BOAT_ENGINE_FORCE;
+  const fx = Math.cos(boat.heading) * force;
+  const fy = Math.sin(boat.heading) * force;
+
+  boat.vx += fx * dt;
+  boat.vy += fy * dt;
+
+  // 4. Drag & Keel Effect (Local space velocity)
+  const cos = Math.cos(boat.heading);
+  const sin = Math.sin(boat.heading);
+  
+  let forwardVel = boat.vx * cos + boat.vy * sin;
+  let lateralVel = -boat.vx * sin + boat.vy * cos;
+
+  // Apply friction
+  forwardVel *= Math.max(0, 1 - 1.2 * dt); // Water resistance (forward drag)
+  lateralVel *= Math.max(0, 1 - 5.0 * dt); // Keel effect prevents sliding (lateral drag)
+
+  // Back to world space
+  boat.vx = forwardVel * cos - lateralVel * sin;
+  boat.vy = forwardVel * sin + lateralVel * cos;
+  boat.speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy);
+
   const onShallow = anySandbank(state.sandbanks, boat.x, boat.y);
-  if (onShallow && boat.ramCooldown <= 0 && speed > 80) {
+  if (onShallow && boat.ramCooldown <= 0 && currentSpeed > 80) {
     boat.ramCooldown = 0.8;
     state.fx.push({ id: fxIdCounter++, kind: 'crash', x: boat.x, y: boat.y, t: performance.now() / 1000 });
-    playCrashSound(speed / BOAT_MAX_SPEED);
+    playCrashSound(Math.min(1, currentSpeed / 200));
     boat.vx *= -0.4;
     boat.vy *= -0.4;
   }
   const speedMul = onShallow ? 0.35 : 1;
-  if (onShallow && speed > BOAT_MIN_SPEED) {
-    boat.vx *= Math.pow(0.9, dt * 60);
-    boat.vy *= Math.pow(0.9, dt * 60);
+  if (onShallow && currentSpeed > 20) {
+    boat.vx *= Math.max(0, 1 - 3.0 * dt);
+    boat.vy *= Math.max(0, 1 - 3.0 * dt);
   }
 
   boat.x += boat.vx * dt * speedMul;
   boat.y += boat.vy * dt * speedMul;
-  boat.speed = Math.sqrt(boat.vx * boat.vx + boat.vy * boat.vy) * speedMul;
 
   if (boat.x < 30) { boat.x = 30; boat.vx = 0; }
   if (boat.x > MAP_W - 30) { boat.x = MAP_W - 30; boat.vx = 0; }

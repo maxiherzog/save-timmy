@@ -130,20 +130,7 @@ export function GameCanvas({ state }: Props) {
         ctx.strokeStyle = 'rgba(90,70,40,0.35)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
-
-        // Draw decorations
-        for (const dec of sb.decorations) {
-          const img = decorationImages[dec.asset];
-          if (!img || !img.complete) continue;
-          ctx.save();
-          ctx.translate(dec.x, dec.y);
-          ctx.rotate(dec.rotation);
-          if (dec.mirrored) ctx.scale(-1, 1);
-          ctx.scale(dec.scale, dec.scale);
-          ctx.drawImage(img, -img.width / 2, -img.height);
-          ctx.restore();
-        }
-
+        
         ctx.restore();
         
         // Restore text drawing for sandbanks
@@ -153,6 +140,22 @@ export function GameCanvas({ state }: Props) {
           ctx.font = '700 16px "Comic Neue", system-ui';
           ctx.textAlign = 'center';
           ctx.fillText(sb.name, sb.x, sb.y + 6);
+          ctx.restore();
+        }
+      }
+
+      // Draw decorations in a separate pass after all sandbanks are drawn
+      for (const sb of s.sandbanks) {
+        if (!sb.visible || sb.poly.length < 3) continue;
+        for (const dec of sb.decorations) {
+          const img = decorationImages[dec.asset];
+          if (!img || !img.complete) continue;
+          ctx.save();
+          ctx.translate(dec.x, dec.y);
+          ctx.rotate(dec.rotation);
+          if (dec.mirrored) ctx.scale(-1, 1);
+          ctx.scale(dec.scale, dec.scale);
+          ctx.drawImage(img, -img.width / 2, -img.height);
           ctx.restore();
         }
       }

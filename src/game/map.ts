@@ -195,8 +195,13 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
         if (pointInPoly(x, y, sb.poly)) {
-          const foliageNoise = noise2D(x * 0.005, y * 0.005, seed);
-          const stoneNoise = noise2D(x * 0.01, y * 0.01, seed + 123);
+          let foliageNoise = noise2D(x * 0.005, y * 0.005, seed);
+          // Bias foliage downwards (y increases downwards)
+          foliageNoise *= (0.5 + (y / MAP_H) * 1.0); 
+          
+          let stoneNoise = noise2D(x * 0.01, y * 0.01, seed + 123);
+          // Slightly reduce stone frequency near the bottom to let trees shine
+          if (y > MAP_H * 0.7) stoneNoise *= 0.7;
 
           let asset = '';
           let scale = 0.12 + rng() * 0.05;

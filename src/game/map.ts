@@ -220,11 +220,11 @@ export const HARBOR_ZONES: {x: number, y: number}[] = [
 ];
 
 export const BARGE: Barge = {
-  x: MAP_W - 160,
-  y: MAP_H - 160,
-  w: 110,
-  h: 100,
-  wallThickness: 16,
+  x: MAP_W - 280,
+  y: MAP_H - 280,
+  w: 132,
+  h: 120,
+  wallThickness: 20,
 };
 
 export const COAST_TOP = 90;

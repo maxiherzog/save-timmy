@@ -6,6 +6,7 @@ import { VotingOverlay } from '../components/VotingOverlay';
 import { EndScreen } from '../components/EndScreen';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { WhaleLogo } from '../components/WhaleLogo';
+import { characterById } from '../game/characters';
 import { Users, Copy, Check, LogOut } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -182,17 +183,21 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
       <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 max-w-xs">
         <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-semibold">Spieler</div>
         <div className="space-y-1.5">
-          {players.map((p) => (
-            <div key={p.id} className={`flex items-center gap-2 text-sm ${p.boat.alive ? '' : 'opacity-40 line-through'}`}>
-              <div
-                className="w-5 h-5 rounded-full border"
-                style={{
-                  background: `var(--char-${p.characterId})`,
-                }}
-              />
-              <span className="font-semibold truncate">{p.name}</span>
-            </div>
-          ))}
+          {players.map((p) => {
+            const ch = characterById(p.characterId);
+            return (
+              <div key={p.id} className={`flex items-center gap-2 text-sm ${p.boat.alive ? '' : 'opacity-40 line-through'}`}>
+                <div
+                  className="w-5 h-5 rounded-full border-2"
+                  style={{
+                    backgroundColor: ch.color,
+                    borderColor: ch.accent
+                  }}
+                />
+                <span className="font-semibold truncate">{p.name}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

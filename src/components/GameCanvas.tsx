@@ -391,9 +391,9 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-5, 0); // Origin relative to pivot
-  ctx.bezierCurveTo(-15, 15, -25, 30, -15, 25);
-  ctx.bezierCurveTo(-5, 20, 5, 10, 5, 0);
+  ctx.moveTo(0, 0); // Origin relative to pivot
+  ctx.bezierCurveTo(-10, 15, -20, 30, -10, 25);
+  ctx.bezierCurveTo(0, 20, 10, 10, 0, 0);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();

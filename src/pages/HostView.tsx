@@ -137,7 +137,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
     const readyCount = players.filter((p) => p.ready).length;
     const waiting = state.phase === 'ready';
     const countdown = state.phase === 'countdown';
-    const timeLeft = Math.max(0, Math.ceil(state.countdownUntil - performance.now() / 1000));
+    
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <div className="text-center">
@@ -145,7 +145,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
             {waiting ? 'Schaut auf eure Handys' : countdown ? 'Spiel startet bald!' : 'Rollen werden verteilt'}
           </div>
           <div className="text-6xl md:text-7xl font-bold mb-2">
-            {waiting ? 'Bereit machen!' : countdown ? `${timeLeft}` : 'Auf geht\u2019s!'}
+            {waiting ? 'Bereit machen!' : countdown ? 'Es geht gleich los...' : 'Auf geht\u2019s!'}
           </div>
           {waiting && (
             <div className="text-xl text-slate-600 mb-8 tabular-nums">
@@ -186,12 +186,9 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
         <GameCanvas state={state} />
       </div>
       
-      {(state.phase === 'countdown' as any) && (
+      {(state.phase as any) === 'countdown' && (
         <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20">
-          <div className="text-4xl font-bold mb-4">Das Spiel beginnt!</div>
-          <div className="text-8xl font-black">
-             {Math.max(0, Math.ceil(state.countdownUntil - performance.now() / 1000))}
-          </div>
+          <div className="text-4xl font-bold">Es geht gleich los...</div>
         </div>
       )}
 

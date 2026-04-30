@@ -66,7 +66,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
 
   if (!state) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center text-center p-4">
         <div className="mb-8">
           <Waves className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-pulse" />
           <div className="font-semibold text-xl mb-2">Verbinde mit Raum {code}...</div>
@@ -84,7 +84,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
 
   if (state.phase === 'lobby') {
     return (
-      <div className="min-h-screen flex flex-col p-4 sm:p-6">
+      <div className="min-h-[100dvh] flex flex-col p-4 sm:p-6">
         <div className="text-center my-8">
           <div className="text-sm uppercase tracking-widest text-slate-500 mb-2">Raum {code}</div>
           <div className="text-3xl font-bold mb-2">Hallo, {name}!</div>
@@ -123,8 +123,24 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     const canReady = state.phase === 'ready';
     const connected = Object.values(state.players).filter((p) => p.connected);
     const readyCount = connected.filter((p) => p.ready).length;
+
+    const handleReadyClick = async () => {
+      if (canReady && !isReady) {
+        try {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+          } else if ((document.documentElement as any).webkitRequestFullscreen) {
+            await (document.documentElement as any).webkitRequestFullscreen();
+          }
+        } catch (e) {
+          console.warn('Fullscreen request failed or not supported:', e);
+        }
+        ready();
+      }
+    };
+
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center`}>
+      <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center`}>
         <div className="text-sm uppercase tracking-widest text-slate-500 mb-4">Du spielst als</div>
         <div className="text-3xl font-bold mb-1">{c.name}</div>
 
@@ -157,7 +173,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
         )}
 
         <button
-          onClick={() => { if (canReady && !isReady) ready(); }}
+          onClick={handleReadyClick}
           disabled={!canReady || isReady}
           className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg border-2 transition-all ${
             isReady
@@ -188,7 +204,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   if (state.phase === 'voting') {
     const alive = Object.values(state.players).filter((p) => p.boat.alive);
     return (
-      <div className="min-h-screen p-5 flex flex-col bg-slate-50">
+      <div className="min-h-[100dvh] p-5 flex flex-col bg-slate-50">
         <div className="text-center mb-6">
           <Mic className="w-8 h-8 text-slate-700 mx-auto mb-2" />
           <div className="font-bold text-2xl text-slate-900">PRESSEKONFERENZ</div>
@@ -247,7 +263,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     const isImposter = role?.role === 'imposter';
     const iWon = (isImposter && e.winner === 'imposter') || (!isImposter && e.winner === 'rescuers');
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center p-6 text-center`}>
+      <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center`}>
         <div className={`text-5xl font-bold mb-4 ${iWon ? 'text-green-500' : 'text-red-500'}`}>
           {iWon ? 'SIEG!' : 'NIEDERLAGE'}
         </div>

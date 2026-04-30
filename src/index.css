@@ -7,6 +7,12 @@ html, body, #root {
   margin: 0;
   background: #ffffff;
   color: #1a1a1a;
+  overscroll-behavior: none;
+}
+
+body {
+  /* Prevent pull-to-refresh on mobile */
+  touch-action: none;
 }
 
 * {

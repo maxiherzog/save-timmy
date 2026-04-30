@@ -40,6 +40,8 @@ export type Whale = {
   strandTimer: number;
   healCooldown: number;
   soundCooldown: number;
+  panicTimer: number;
+  ignoreBanksUntil: number;
 };
 
 export type Sandbank = {
@@ -89,6 +91,7 @@ export type VoteState = {
 export type GameState = {
   code: string;
   phase: 'lobby' | 'starting' | 'ready' | 'playing' | 'voting' | 'ended';
+  playTime: number;
   impostersCount: number;
   players: Record<string, Player>;
   whale: Whale;

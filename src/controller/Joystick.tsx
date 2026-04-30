@@ -63,14 +63,15 @@ export function Joystick({ onChange, size = 180 }: Props) {
     };
   }, [onChange, size]);
 
+  // Use steering wheel emoji for the handle
   return (
     <div
       ref={ref}
-      className="relative rounded-full bg-slate-800/80 border-4 border-slate-600 touch-none select-none"
+      className="relative rounded-full bg-slate-800/80 border-4 border-slate-600 touch-none select-none overflow-visible shadow-inner"
       style={{ width: size, height: size }}
     >
       <div
-        className="absolute rounded-full bg-gradient-to-br from-teal-300 to-teal-500 shadow-lg border-2 border-white/40"
+        className="absolute flex items-center justify-center text-5xl"
         style={{
           width: size * 0.42,
           height: size * 0.42,
@@ -78,7 +79,9 @@ export function Joystick({ onChange, size = 180 }: Props) {
           top: size / 2 - (size * 0.42) / 2 + knob.y,
           transition: active.current ? 'none' : 'all 0.15s ease-out',
         }}
-      />
+      >
+        <span className="drop-shadow-lg filter -ml-1 -mt-1">☸️</span>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,8 @@ export function createInitialWhale(): Whale {
     strandTimer: 0,
     healCooldown: 0,
     soundCooldown: 5,
+    panicTimer: 0,
+    ignoreBanksUntil: 7, // 7 seconds grace period
   };
 }
 
@@ -45,6 +47,7 @@ export function createInitialState(code: string, impostersCount: number = 1): Ga
   return {
     code,
     phase: 'lobby',
+    playTime: 0,
     impostersCount,
     players: {},
     whale: createInitialWhale(),
@@ -180,6 +183,8 @@ function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, str
   whale.x += (dx / dist) * f * 0.016;
   whale.y += (dy / dist) * f * 0.016;
   whale.wanderHeading = Math.atan2(dy, dx);
+  // Hupen causes a bit of panic, increasing speed temporarily
+  whale.panicTimer = Math.max(whale.panicTimer, 1.5 * falloff);
 }
 
 function updateWhale(state: GameState, dt: number) {
@@ -187,6 +192,7 @@ function updateWhale(state: GameState, dt: number) {
   if (w.state === 'dead') return;
 
   const hpBefore = w.hp;
+  state.playTime += dt;
 
   w.soundCooldown -= dt;
   if (w.soundCooldown <= 0) {
@@ -194,13 +200,29 @@ function updateWhale(state: GameState, dt: number) {
     playWhaleSound(0.5 + w.hp / WHALE_MAX_HP * 0.5);
   }
 
+  w.panicTimer = Math.max(0, w.panicTimer - dt);
   w.wanderTimer -= dt;
   if (w.wanderTimer <= 0) {
     w.wanderTimer = 1.5 + Math.random() * 1.5;
-    w.wanderHeading += (Math.random() - 0.5) * 1.5;
+    
+    // Sometimes actively steer towards a sandbank to make it harder
+    const shouldSeekSandbank = state.playTime > w.ignoreBanksUntil && Math.random() < 0.35;
+    
+    if (shouldSeekSandbank && state.sandbanks.length > 0) {
+      // Find a random sandbank in the middle (ignore coastlines)
+      const innerBanks = state.sandbanks.filter(sb => sb.name !== '');
+      if (innerBanks.length > 0) {
+        const targetBank = innerBanks[Math.floor(Math.random() * innerBanks.length)];
+        w.wanderHeading = Math.atan2(targetBank.y - w.y, targetBank.x - w.x);
+        w.wanderTimer += 1.5; // Steer towards it a bit longer
+      }
+    } else {
+      w.wanderHeading += (Math.random() - 0.5) * 1.5;
+    }
   }
 
-  if (w.state !== 'stranded') {
+  if (w.state !== 'stranded' && state.playTime <= w.ignoreBanksUntil) {
+    // Only avoid sandbanks during grace period
     const lookDist = 75;
     const ax = w.x + Math.cos(w.wanderHeading) * lookDist;
     const ay = w.y + Math.sin(w.wanderHeading) * lookDist;
@@ -210,7 +232,8 @@ function updateWhale(state: GameState, dt: number) {
   }
 
   const hpMul = w.hp < 10 ? 0 : w.hp < 30 ? 0.5 : 1;
-  const baseSpeed = 28 * hpMul;
+  const panicMul = w.panicTimer > 0 ? 1.8 : 1; // Speed up when panicked
+  const baseSpeed = 28 * hpMul * panicMul;
 
   const shallow = anySandbank(state.sandbanks, w.x, w.y);
   if (shallow) {

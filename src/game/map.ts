@@ -256,6 +256,20 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
             }
           }
 
+          if (asset && asset.startsWith('tree')) {
+            let tooClose = false;
+            const minTreeDistSq = 80 * 80;
+            for (const dec of sb.decorations) {
+              if (dec.asset.startsWith('tree')) {
+                if ((dec.x - x) ** 2 + (dec.y - y) ** 2 < minTreeDistSq) {
+                  tooClose = true;
+                  break;
+                }
+              }
+            }
+            if (tooClose) asset = '';
+          }
+
           if (asset) {
             const maxRot = 2 * (Math.PI / 180);
             sb.decorations.push({
@@ -293,6 +307,8 @@ export function createMap(seed: number): Sandbank[] {
     // t is from 0 to 1 across the bottom edge
     // Flat part on the right (e.g. last 20%)
     if (t > 0.8) return -wallVariance; // Push it towards the edge to make it flat
+    // Inward bulge to the right of the dock (dock ends at x=440, t=0.275)
+    if (t > 0.3 && t < 0.6) return 40; 
     // Kink around 60-70%
     if (t > 0.6 && t < 0.7) return 20; 
     return 0;

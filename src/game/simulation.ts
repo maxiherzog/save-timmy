@@ -353,7 +353,7 @@ function updateWhale(state: GameState, dt: number) {
         const trampelRadius = 380 * (0.5 + 0.5 * stamFrac);
         if (bDistSq < trampelRadius * trampelRadius && bDistSq > 1) {
            const bDist = Math.sqrt(bDistSq);
-           const pushF = 150 * (1 - bDist / trampelRadius) * stamFrac;
+           const pushF = 15 * (1 - bDist / trampelRadius) * stamFrac;
            otherP.boat.vx += (bdx / bDist) * pushF;
            otherP.boat.vy += (bdy / bDist) * pushF;
         }

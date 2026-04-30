@@ -176,17 +176,6 @@ export function GameCanvas({ state }: Props) {
         drawWhale(ctx, w, whalePhase);
         ctx.restore();
 
-        if (w.hp > 40 && Math.sin(whalePhase * 1.2) > 0.7) {
-          ctx.save();
-          ctx.translate(w.x, w.y);
-          // Don't flip the spout when swimming left
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.beginPath();
-          ctx.ellipse(0, -30, 4, 18, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
-
         ctx.fillStyle = '#fff';
         ctx.strokeStyle = 'rgba(0,0,0,0.8)';
         ctx.lineWidth = 4;

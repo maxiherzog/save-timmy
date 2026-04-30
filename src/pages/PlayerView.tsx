@@ -196,11 +196,11 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
                   vote(p.id);
                   navigator.vibrate?.(40);
                 }}
-                className={`p-4 rounded-xl flex items-center gap-4 border-2 transition-transform ${
+                className={`p-4 rounded-xl flex items-center gap-4 border-2 ${
                   isSelf ? 'opacity-50 cursor-not-allowed border-slate-300' :
                   isVoted
-                    ? 'scale-[1.02] border-slate-800 ring-2 ring-slate-800/20 shadow-md'
-                    : 'border-transparent shadow-sm active:scale-95'
+                    ? 'border-slate-800 ring-2 ring-slate-800/20 shadow-md'
+                    : 'border-transparent shadow-sm'
                 }`}
                 style={{ backgroundColor: ch.color }}
               >

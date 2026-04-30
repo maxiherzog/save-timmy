@@ -231,6 +231,9 @@ export function GameCanvas({ state }: Props) {
       }
 
 
+      // Draw Below-FX (e.g. wakes)
+      drawFxBelow(ctx, s);
+
       const w = s.whale;
       if (w.state !== 'dead') {
         ctx.save();
@@ -346,7 +349,8 @@ export function GameCanvas({ state }: Props) {
         ctx.restore();
       }
 
-      drawFx(ctx, s);
+      // Draw Above-FX
+      drawFxAbove(ctx, s);
 
       if (w.hp < 25 && w.state !== 'dead') {
         ctx.fillStyle = `rgba(139, 20, 40, ${(25 - w.hp) / 80})`;
@@ -530,7 +534,7 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   }
 }
 
-function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
+function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
   const now = performance.now() / 1000;
   for (const fx of state.fx as any[]) {
     const age = now - fx.t;
@@ -551,7 +555,15 @@ function drawFx(ctx: CanvasRenderingContext2D, state: GameState) {
       ctx.lineTo(spread, -length);
       ctx.stroke();
       ctx.restore();
-    } else if (fx.kind === 'hupen') {
+    }
+  }
+}
+
+function drawFxAbove(ctx: CanvasRenderingContext2D, state: GameState) {
+  const now = performance.now() / 1000;
+  for (const fx of state.fx as any[]) {
+    const age = now - fx.t;
+    if (fx.kind === 'hupen') {
       ctx.save();
       ctx.globalAlpha = Math.max(0, 1 - age / 0.3);
       ctx.strokeStyle = '#f87171';

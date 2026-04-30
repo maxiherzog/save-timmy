@@ -317,8 +317,8 @@ function updateWhale(state: GameState, dt: number) {
     
     // Wakes
     if (baseSpeed > 5 && Math.random() < 0.1) {
-      // Spawn further back
-      state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x - Math.cos(w.heading) * 60, y: w.y - Math.sin(w.heading) * 60, t: performance.now() / 1000, heading: w.heading });
+      // Spawn closer to the center of the whale
+      state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x - Math.cos(w.heading) * 20, y: w.y - Math.sin(w.heading) * 20, t: performance.now() / 1000, heading: w.heading });
     }
   }
   

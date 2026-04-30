@@ -8,4 +8,5 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  base: '/save-timmy/'
 });

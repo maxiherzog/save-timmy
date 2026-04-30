@@ -199,8 +199,8 @@ function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, str
   if (dist > radius || dist < 0.01) return;
   const falloff = 1 - dist / radius;
   
-  // Make it easier to push Timmy off the sandbank (0.9 instead of 0.5)
-  const stuckMul = whale.state === 'stranded' ? 0.9 : 1;
+  // Make it easier to push Timmy off the sandbank (1.5 instead of 0.9)
+  const stuckMul = whale.state === 'stranded' ? 1.5 : 1;
   const f = strength * falloff * 160 * stuckMul;
   
   whale.x += (dx / dist) * f * 0.016;
@@ -272,7 +272,7 @@ function updateWhale(state: GameState, dt: number) {
     }
   }
 
-  const hpMul = w.hp < 10 ? 0 : w.hp < 30 ? 0.5 : 1;
+  const hpMul = w.hp < 10 ? 0.15 : w.hp < 30 ? 0.5 : 1;
   const panicMul = w.panicTimer > 0 ? 1.8 : 1; // Speed up when panicked
   const baseSpeed = 28 * hpMul * panicMul;
 

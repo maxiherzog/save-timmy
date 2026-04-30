@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePlayer } from '../game/usePlayer';
 import { Joystick } from '../controller/Joystick';
+import { Throttle } from '../controller/Throttle';
 import { characterById } from '../game/characters';
 import { Siren, Volume2, Mic, Waves, AlertTriangle, Heart, LogOut, Wifi } from 'lucide-react';
 
@@ -283,29 +284,37 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
         </div>
       </div>
       {/* Controls */}
-      <div className="flex-1 grid grid-cols-2 gap-3 p-4">
-        <div className="flex items-center justify-center">
+      <div className="flex-1 flex p-4 gap-4">
+        {/* Left side: Throttle */}
+        <div className="flex items-center justify-center pl-2">
+          <Throttle onChange={(val) => setInput({ joystickY: -val })} height={200} />
+        </div>
+
+        {/* Center: Steering Wheel */}
+        <div className="flex-1 flex items-center justify-center">
           <Joystick
-            onChange={(x, y) => setInput({ joystickX: x, joystickY: y })}
-            size={180}
+            onChange={(x) => setInput({ joystickX: x })}
+            size={160}
           />
         </div>
-        <div className="flex flex-col gap-2.5">
+
+        {/* Right side: Action Buttons */}
+        <div className="flex flex-col justify-center gap-3 pr-2 w-24">
           <button
             onTouchStart={(e) => { e.preventDefault(); doHupen(); }}
             onClick={doHupen}
-            className={`flex-1 rounded-2xl font-bold border-2 transition-transform ${
+            className={`w-full aspect-square rounded-full font-bold border-2 transition-transform ${
               hupenFlash ? 'scale-95' : ''
             } bg-red-500 hover:bg-red-600 border-red-300/50 text-white flex flex-col items-center justify-center shadow-lg`}
           >
-            <Siren className="w-7 h-7 mb-1" />
-            HUPEN
+            <Siren className="w-8 h-8" />
           </button>
+
           <button
             onTouchStart={(e) => { e.preventDefault(); if (!exhausted) doTrampeln(); }}
             onClick={() => { if (!exhausted) doTrampeln(); }}
             disabled={exhausted}
-            className={`relative flex-1 rounded-2xl font-bold border-2 overflow-hidden transition-transform ${
+            className={`relative w-full aspect-square rounded-full font-bold border-2 overflow-hidden transition-transform ${
               trampelnFlash ? 'scale-95' : ''
             } ${
               exhausted
@@ -314,23 +323,24 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
             } flex flex-col items-center justify-center`}
           >
             <div
-              className="absolute left-0 bottom-0 h-1.5 bg-blue-200 transition-all"
-              style={{ width: `${staminaFrac * 100}%` }}
+              className="absolute left-0 bottom-0 right-0 bg-blue-200/30 transition-all"
+              style={{ height: `${staminaFrac * 100}%` }}
             />
-            <Volume2 className="w-6 h-6 mb-1" />
-            {exhausted ? 'ERSCHÖPFT' : 'TRAMPELN'}
+            <Volume2 className="w-8 h-8 relative z-10" />
           </button>
+          
           <button
             onClick={doPressConference}
             disabled={pkUsed}
-            className={`rounded-xl font-bold py-3 text-sm border-2 flex items-center justify-center gap-1.5 ${
+            className={`w-full py-2 rounded-xl font-bold text-xs border-2 flex items-center justify-center gap-1.5 ${
               pkUsed
                 ? 'bg-slate-200 border-slate-300 text-slate-500'
                 : 'bg-slate-700 hover:bg-slate-800 border-slate-600 text-white'
             }`}
+            title="Pressekonferenz"
           >
             <Mic className="w-4 h-4" />
-            {pkUsed ? 'PK verwendet' : 'Pressekonferenz'}
+            {pkUsed ? 'PK' : 'PK'}
           </button>
         </div>
       </div>

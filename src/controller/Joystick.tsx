@@ -7,24 +7,21 @@ type Props = {
 
 export function Joystick({ onChange, size = 180 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [knob, setKnob] = useState({ x: 0, y: 0 });
+  const [knobX, setKnobX] = useState(0); // Only tracking X for steering
   const active = useRef(false);
 
   useEffect(() => {
     function pos(e: PointerEvent) {
       const rect = ref.current!.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
       let dx = e.clientX - cx;
-      let dy = e.clientY - cy;
       const max = size / 2 - 16;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d > max) {
-        dx = (dx / d) * max;
-        dy = (dy / d) * max;
+      if (Math.abs(dx) > max) {
+        dx = Math.sign(dx) * max;
       }
-      setKnob({ x: dx, y: dy });
-      onChange(dx / max, dy / max);
+      setKnobX(dx);
+      // We only emit X for steering
+      onChange(dx / max, 0);
     }
     function down(e: PointerEvent) {
       if (!ref.current) return;
@@ -47,7 +44,7 @@ export function Joystick({ onChange, size = 180 }: Props) {
     function up() {
       if (!active.current) return;
       active.current = false;
-      setKnob({ x: 0, y: 0 });
+      setKnobX(0);
       onChange(0, 0);
     }
     const el = ref.current!;
@@ -63,24 +60,23 @@ export function Joystick({ onChange, size = 180 }: Props) {
     };
   }, [onChange, size]);
 
-  // Use steering wheel emoji for the handle
+  // Visual rotation based on X
+  const rotation = (knobX / (size / 2 - 16)) * 90; // Max 90 degrees
+
   return (
     <div
       ref={ref}
-      className="relative rounded-full bg-slate-800/80 border-4 border-slate-600 touch-none select-none overflow-visible shadow-inner"
+      className="relative rounded-full touch-none select-none overflow-visible"
       style={{ width: size, height: size }}
     >
       <div
-        className="absolute flex items-center justify-center text-5xl"
+        className="absolute inset-0 flex items-center justify-center text-[100px] origin-center"
         style={{
-          width: size * 0.42,
-          height: size * 0.42,
-          left: size / 2 - (size * 0.42) / 2 + knob.x,
-          top: size / 2 - (size * 0.42) / 2 + knob.y,
-          transition: active.current ? 'none' : 'all 0.15s ease-out',
+          transition: active.current ? 'none' : 'transform 0.2s ease-out',
+          transform: `rotate(${rotation}deg)`
         }}
       >
-        <span className="drop-shadow-lg filter -ml-1 -mt-1">☸️</span>
+        <span className="drop-shadow-2xl">☸️</span>
       </div>
     </div>
   );

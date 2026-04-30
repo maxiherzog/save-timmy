@@ -24,14 +24,12 @@ export function createInitialWhale(): Whale {
 }
 
 export function createBoat(index: number, _total: number): Boat {
-  const spawnPos = {
-    x: DOCK_ZONE.x + 40 + (index % 5) * 40,
-    y: DOCK_ZONE.y + 40 + Math.floor(index / 5) * 60
-  };
+  // Spread boats along the dock shore (bottom edge)
+  // Each boat points upwards (-PI/2)
   return {
-    x: spawnPos.x,
-    y: spawnPos.y,
-    heading: 0,
+    x: DOCK_ZONE.x + 40 + (index % 10) * 35,
+    y: DOCK_ZONE.y + DOCK_ZONE.h - 30,
+    heading: -Math.PI / 2, 
     vx: 0,
     vy: 0,
     speed: 0,

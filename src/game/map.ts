@@ -367,7 +367,8 @@ export const HEAL_ZONES: HealZone[] = [
   { x: 820, y: 720, w: 220, h: 40 },
 ];
 
-export const DOCK_ZONE = { x: 40, y: MAP_H - 340, w: 250, h: 300 };
+// Dock at the bottom left, wider along the shore
+export const DOCK_ZONE = { x: 40, y: MAP_H - 250, w: 400, h: 200 };
 
 export const BARGE: Barge = {
   x: MAP_W - 280,

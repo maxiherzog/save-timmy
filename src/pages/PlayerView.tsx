@@ -166,13 +166,13 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   if (state.phase === 'voting') {
     const alive = Object.values(state.players).filter((p) => p.boat.alive);
     return (
-      <div className="min-h-screen p-5 flex flex-col">
+      <div className="min-h-screen p-5 flex flex-col bg-slate-900">
         <div className="text-center mb-6">
-          <Mic className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-          <div className="font-bold text-2xl">PRESSEKONFERENZ</div>
-          <div className="text-sm text-slate-500">Wer ist der Saboteur? Stimme jetzt ab.</div>
+          <Mic className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <div className="font-bold text-2xl text-white">PRESSEKONFERENZ</div>
+          <div className="text-sm text-slate-400">Wer ist der Saboteur? Stimme jetzt ab.</div>
         </div>
-        <div className="flex-1 space-y-2 overflow-y-auto">
+        <div className="flex-1 space-y-3 overflow-y-auto pb-6">
           {alive.map((p) => {
             const ch = characterById(p.characterId);
             const isVoted = voted === p.id;
@@ -186,32 +186,38 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
                   vote(p.id);
                   navigator.vibrate?.(40);
                 }}
-                className={`p-4 rounded-xl flex items-center gap-4 transition-all ${
-                  isSelf ? 'opacity-50 cursor-not-allowed bg-slate-800' :
+                className={`p-4 rounded-xl flex items-center gap-4 ${
+                  isSelf ? 'opacity-50 cursor-not-allowed bg-slate-800 border-2 border-slate-700' :
                   isVoted
-                    ? 'bg-blue-500/20 border-2 border-blue-500 ring-2 ring-blue-500/50 scale-[1.02]'
-                    : 'bg-slate-800/80 border-2 border-slate-700 active:scale-95'
+                    ? 'bg-blue-900/40 border-2 border-blue-500 ring-2 ring-blue-500/50'
+                    : 'bg-slate-800 border-2 border-slate-700 active:bg-slate-700'
                 }`}
               >
-                <div className="text-left flex-1">
-                  <div className="font-bold text-lg">{p.name}</div>
-                  <div className="text-xs text-slate-500">{ch.name}</div>
+                <div 
+                  className="w-4 h-12 rounded-full shadow-inner" 
+                  style={{ backgroundColor: ch.color, border: `2px solid ${ch.accent}` }}
+                />
+                <div className="text-left flex-1 min-w-0">
+                  <div className="font-bold text-lg text-white truncate">{p.name}</div>
+                  <div className="text-xs text-slate-400 truncate">{ch.name}</div>
                 </div>
-                {isVoted && <div className="text-blue-500 font-bold text-2xl">✓</div>}
+                {isVoted && <div className="text-blue-400 font-bold text-2xl pr-2">✓</div>}
               </div>
             );
           })}
-          <button
-            onClick={() => { setVoted('skip'); vote('skip'); }}
-            disabled={!me?.boat.alive}
-            className={`w-full p-4 rounded-xl border-2 font-bold transition ${
-              voted === 'skip'
-                ? 'bg-slate-200 border-slate-400'
-                : 'bg-white border-slate-200 hover:border-slate-400'
-            }`}
-          >
-            Niemanden rauswerfen
-          </button>
+          <div className="pt-4">
+            <button
+              onClick={() => { setVoted('skip'); vote('skip'); }}
+              disabled={!me?.boat.alive}
+              className={`w-full p-4 rounded-xl border-2 font-bold ${
+                voted === 'skip'
+                  ? 'bg-slate-700 border-slate-500 text-white'
+                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Niemanden rauswerfen
+            </button>
+          </div>
         </div>
       </div>
     );

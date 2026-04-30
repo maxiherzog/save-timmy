@@ -290,14 +290,32 @@ function updateWhale(state: GameState, dt: number) {
 
   if (w.state === 'swimming' || w.state === 'dying') {
     w.heading += (w.wanderHeading - w.heading) * dt * 0.8;
+    
+    // Edge avoidance steering
+    const edgeMargin = 150;
+    let steerX = 0;
+    let steerY = 0;
+    if (w.x < edgeMargin) steerX = 0.5 * (1 - w.x / edgeMargin);
+    else if (w.x > MAP_W - edgeMargin) steerX = -0.5 * (1 - (MAP_W - w.x) / edgeMargin);
+    
+    if (w.y < edgeMargin) steerY = 0.5 * (1 - w.y / edgeMargin);
+    else if (w.y > MAP_H - edgeMargin) steerY = -0.5 * (1 - (MAP_H - w.y) / edgeMargin);
+    
+    if (steerX !== 0 || steerY !== 0) {
+      const targetHeading = Math.atan2(steerY, steerX);
+      w.wanderHeading += (targetHeading - w.wanderHeading) * dt * 0.5;
+    }
+
     w.x += Math.cos(w.heading) * baseSpeed * dt;
     w.y += Math.sin(w.heading) * baseSpeed * dt;
   }
-
+  
+  // Hard boundaries as safety
   if (w.x < 60) { w.x = 60; w.wanderHeading = 0; }
   if (w.x > MAP_W - 60) { w.x = MAP_W - 60; w.wanderHeading = Math.PI; }
   if (w.y < 60) { w.y = 60; w.wanderHeading = Math.PI / 2; }
   if (w.y > MAP_H - 60) { w.y = MAP_H - 60; w.wanderHeading = -Math.PI / 2; }
+
 
   if (pointInHealZone(w.x, w.y)) {
     w.healCooldown -= dt;

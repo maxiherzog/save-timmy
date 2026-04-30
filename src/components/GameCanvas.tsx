@@ -96,7 +96,7 @@ export function GameCanvas({ state }: Props) {
 
       // Sandbanks
       for (const sb of s.sandbanks) {
-        if (sb.poly.length < 3) continue;
+        if (!sb.visible || sb.poly.length < 3) continue;
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(sb.poly[0][0], sb.poly[0][1]);

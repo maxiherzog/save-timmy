@@ -62,6 +62,7 @@ export type Sandbank = {
   name: string;
   poly: Array<[number, number]>;
   decorations: Decoration[];
+  visible: boolean;
 };
 
 export type HealZone = {

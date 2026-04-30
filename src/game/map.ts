@@ -71,11 +71,15 @@ function coastlinePoly(
   depthMax: number,
   segments: number,
   rng: () => number,
+  depthProfile?: (t: number) => number,
 ): Array<[number, number]> {
   const poly: Array<[number, number]> = [];
   const depths: number[] = [];
   for (let i = 0; i <= segments; i++) {
-    depths.push(depthMin + rng() * (depthMax - depthMin));
+    const t = i / segments;
+    const baseDepth = depthMin + rng() * (depthMax - depthMin);
+    const offset = depthProfile ? depthProfile(t) : 0;
+    depths.push(baseDepth + offset);
   }
   // Smooth depths a bit
   for (let k = 0; k < 2; k++) {
@@ -83,7 +87,7 @@ function coastlinePoly(
       depths[i] = (depths[i - 1] + depths[i] + depths[i + 1]) / 3;
     }
   }
-
+  
   if (side === 'top') {
     poly.push([start, 0]);
     for (let i = 0; i <= segments; i++) {
@@ -116,6 +120,7 @@ function coastlinePoly(
   return poly;
 }
 
+
 function bbox(poly: Array<[number, number]>) {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const [x, y] of poly) {
@@ -138,11 +143,12 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
     name,
     poly,
     decorations: [],
+    visible: true,
   };
 }
 
-function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, rng: () => number): Sandbank {
-  const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng);
+function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, rng: () => number, visible = true, depthProfile?: (t: number) => number): Sandbank {
+  const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng, depthProfile);
   const bb = bbox(poly);
   return {
     x: (bb.minX + bb.maxX) / 2,
@@ -152,6 +158,7 @@ function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number,
     name: '',
     poly,
     decorations: [],
+    visible,
   };
 }
 
@@ -178,8 +185,8 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
     const bb = bbox(sb.poly);
     const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
     
-    // Reduce total amount by 30% (from area/500 to area/700 approx)
-    const count = Math.floor((area / (isCoast ? 700 : 1400)) * (0.8 + rng() * 0.4));
+    // Increase potential placements to allow the probability filter to work
+    const count = Math.floor((area / (isCoast ? 400 : 800)) * (0.8 + rng() * 0.4));
     
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -188,8 +195,6 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
         if (pointInPoly(x, y, sb.poly)) {
-          // Patchy distribution using noise
-          // Different frequencies for foliage and stones
           const foliageNoise = noise2D(x * 0.005, y * 0.005, seed);
           const stoneNoise = noise2D(x * 0.01, y * 0.01, seed + 123);
 
@@ -203,44 +208,43 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
               scale = 0.2;
               lighthousePlaced = true;
             } else if (roll < 0.5) {
-              // Only place foliage if noise is high (patchy)
-              if (foliageNoise > 0.4) {
+              // Probability scales with foliageNoise
+              if (rng() < foliageNoise * 1.5) {
                 asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
               }
             } else if (roll < 0.7) {
-              // Stones also patchy but different map
-              if (stoneNoise > 0.5) {
+              // Probability scales with stoneNoise
+              if (rng() < stoneNoise * 1.2) {
                 asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
               }
             } else if (roll < 0.85) {
-              if (stoneNoise > 0.6) {
+              if (rng() < stoneNoise * 0.8) {
                 asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
               }
             } else if (roll < 0.95) {
-              // Trees are very picky about noise (small, dense patches)
-              if (foliageNoise > 0.7) {
+              // Trees: stronger dependence on noise
+              if (rng() < foliageNoise * foliageNoise * 2.0) {
                 asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
                 scale = 0.2 + rng() * 0.1;
               }
             } else {
-              if (stoneNoise > 0.7) {
+              if (rng() < stoneNoise * 0.5) {
                 asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
                 scale = 0.08 + rng() * 0.04;
               }
             }
           } else {
-            // Inner sandbanks: mostly pebbles and stones, few shells
             const roll = rng();
             if (roll < 0.6) {
-              if (stoneNoise > 0.5) {
+              if (rng() < stoneNoise * 1.0) {
                 asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
               }
             } else if (roll < 0.9) {
-              if (stoneNoise > 0.6) {
+              if (rng() < stoneNoise * 0.8) {
                 asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
               }
             } else {
-              if (stoneNoise > 0.7) {
+              if (rng() < stoneNoise * 0.4) {
                 asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
                 scale = 0.05 + rng() * 0.03;
               }
@@ -272,13 +276,23 @@ export function createMap(seed: number): Sandbank[] {
   const sandbanks: Sandbank[] = [];
 
   // 1. Continuous coastline around the entire map (creating an invisible wall of sand)
-  const wallThickness = 40; // Reduced thickness
-  const wallVariance = 15; // Reduced variance for smoother coastline
+  const wallThickness = 40; 
+  const wallVariance = 15; 
   
   sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
-  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng));
+  
+  // Bottom coast with a kink and flat right part
+  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng, true, (t) => {
+    // t is from 0 to 1 across the bottom edge
+    // Flat part on the right (e.g. last 20%)
+    if (t > 0.8) return -wallVariance; // Push it towards the edge to make it flat
+    // Kink around 60-70%
+    if (t > 0.6 && t < 0.7) return 20; 
+    return 0;
+  }));
+  
+  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false));
+  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false));
 
   // 2. Generate random inner sandbanks
   const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks

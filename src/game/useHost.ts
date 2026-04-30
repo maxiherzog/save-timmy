@@ -134,7 +134,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     } else if (e.type === 'vote') {
       castVote(s, e.playerId, e.targetId);
     } else if (e.type === 'start' && e.token === hostToken) {
-      if (s.phase === 'lobby') startMatch(imposterCount);
+      if (s.phase === 'lobby') startMatch(s.impostersCount);
     } else if (e.type === 'rematch' && e.token === hostToken) {
       resetToLobby();
     } else if (e.type === 'ready') {
@@ -199,7 +199,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
   function resetToLobby() {
     const old = stateRef.current;
     if (!old) return;
-    const fresh = createInitialState(code);
+    const fresh = createInitialState(code, old.impostersCount);
     // keep players
     for (const [id, p] of Object.entries(old.players)) {
       fresh.players[id] = {

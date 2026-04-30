@@ -3,7 +3,7 @@ import { usePlayer } from '../game/usePlayer';
 import { Throttle } from '../controller/Throttle';
 import { SteeringSlider } from '../controller/SteeringSlider';
 import { characterById } from '../game/characters';
-import { Siren, Sailboat, Mic, Waves, AlertTriangle, Heart, LogOut, Wifi } from 'lucide-react';
+import { Siren, Mic, Waves, AlertTriangle, Heart, LogOut, Wifi, Footprints } from 'lucide-react';
 
 type Props = {
   code: string;
@@ -363,7 +363,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
                 className="absolute left-0 bottom-0 right-0 bg-blue-200/30 transition-all"
                 style={{ height: `${staminaFrac * 100}%` }}
               />
-              <Sailboat className="w-9 h-9 relative z-10" />
+              <Footprints className="w-9 h-9 relative z-10" />
               <span className="text-xs mt-1 relative z-10">{exhausted ? 'ERSCHÖPFT' : 'TRAMPELN'}</span>
             </button>
           </div>

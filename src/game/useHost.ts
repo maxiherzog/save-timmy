@@ -190,9 +190,20 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     const connected = Object.values(s.players).filter((p) => p.connected);
     if (connected.length === 0) return;
     const allReady = connected.every((p) => p.ready);
+    
     if (allReady) {
-      s.phase = 'playing';
-      supabase.from('rooms').update({ state: 'playing' }).eq('code', code);
+      // Use 'starting' as a temporary lock to prevent this from firing multiple times
+      s.phase = 'starting'; 
+      
+      // Short delay to allow all clients (especially the last one) to sync up before the big UI change
+      setTimeout(() => {
+        if (stateRef.current) {
+          stateRef.current.phase = 'playing';
+          stateRef.current.playTime = 0; // Reset game timer
+          if(stateRef.current.whale) stateRef.current.whale.ignoreBanksUntil = 7; // Reset grace period
+          supabase.from('rooms').update({ state: 'playing' }).eq('code', code);
+        }
+      }, 500); // 500ms delay
     }
   }
 

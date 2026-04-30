@@ -192,19 +192,24 @@ function resolveCollision(a: {x: number, y: number}, b: {x: number, y: number}, 
 // (Wait, I already added resolveCollision in the previous edit, but it was just above updateBoat)
 
 
-function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, strength: number) {
+function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, strength: number, causesPanic: boolean = false) {
   const dx = whale.x - srcX;
   const dy = whale.y - srcY;
   const dist = Math.sqrt(dx * dx + dy * dy);
   if (dist > radius || dist < 0.01) return;
   const falloff = 1 - dist / radius;
-  const stuckMul = whale.state === 'stranded' ? 0.5 : 1;
+  
+  // Make it easier to push Timmy off the sandbank (0.9 instead of 0.5)
+  const stuckMul = whale.state === 'stranded' ? 0.9 : 1;
   const f = strength * falloff * 160 * stuckMul;
+  
   whale.x += (dx / dist) * f * 0.016;
   whale.y += (dy / dist) * f * 0.016;
   whale.wanderHeading = Math.atan2(dy, dx);
-  // Hupen causes a bit of panic, increasing speed temporarily
-  whale.panicTimer = Math.max(whale.panicTimer, 1.5 * falloff);
+  
+  if (causesPanic) {
+    whale.panicTimer = Math.max(whale.panicTimer, 1.5 * falloff);
+  }
 }
 
 function updateWhale(state: GameState, dt: number) {
@@ -328,7 +333,7 @@ function updateWhale(state: GameState, dt: number) {
     if (p.input.hupen && p.boat.hupenCooldown <= 0) {
       p.boat.hupenCooldown = 3;
       p.boat.stats.hupen += 1;
-      applyPush(w, p.boat.x, p.boat.y, 230, 1.0);
+      applyPush(w, p.boat.x, p.boat.y, 230, 1.0, true);
       state.fx.push({ id: fxIdCounter++, kind: 'hupen', x: p.boat.x, y: p.boat.y, t: performance.now() / 1000 });
     }
     if (p.input.trampeln && p.boat.trampelnCooldown <= 0 && p.boat.trampelnStamina >= 1) {
@@ -336,7 +341,7 @@ function updateWhale(state: GameState, dt: number) {
       p.boat.stats.trampeln += 1;
       const stamFrac = Math.max(0.15, p.boat.trampelnStamina / TRAMPELN_STAMINA_MAX);
       p.boat.trampelnStamina = Math.max(0, p.boat.trampelnStamina - TRAMPELN_COST);
-      applyPush(w, p.boat.x, p.boat.y, 380 * (0.5 + 0.5 * stamFrac), 0.4 * stamFrac);
+      applyPush(w, p.boat.x, p.boat.y, 380 * (0.5 + 0.5 * stamFrac), 0.4 * stamFrac, false);
       state.fx.push({ id: fxIdCounter++, kind: 'trampeln', x: p.boat.x, y: p.boat.y, t: performance.now() / 1000 });
       
       // Also push other boats slightly when trampeling

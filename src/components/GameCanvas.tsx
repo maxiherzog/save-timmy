@@ -263,28 +263,34 @@ export function GameCanvas({ state }: Props) {
         }
 
         ctx.save();
-        ctx.translate(p.boat.x, p.boat.y - 32);
+        ctx.translate(p.boat.x, p.boat.y - 26);
         const text = p.name.toUpperCase();
         const charText = c.name;
-        ctx.font = '800 18px "Comic Neue", system-ui';
+        
+        ctx.font = '800 14px "Comic Neue", system-ui';
         const wName = ctx.measureText(text).width;
-        ctx.font = '600 13px "Comic Neue", system-ui';
+        ctx.font = '600 10px "Comic Neue", system-ui';
         const wChar = ctx.measureText(charText).width;
-        const tagW = Math.max(wName, wChar) + 20;
-        const tagH = 46;
-        ctx.fillStyle = 'rgba(5, 20, 30, 0.88)';
+        
+        const tagW = Math.max(wName, wChar) + 16;
+        const tagH = 34;
+        
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = 'rgba(5, 20, 30, 0.55)';
         ctx.strokeStyle = c.accent;
-        ctx.lineWidth = 3;
-        roundRect(ctx, -tagW / 2, -tagH, tagW, tagH, 10);
+        ctx.lineWidth = 2;
+        roundRect(ctx, -tagW / 2, -tagH, tagW, tagH, 8);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = '800 18px "Comic Neue", system-ui';
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = '800 14px "Comic Neue", system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText(text, 0, -24);
-        ctx.fillStyle = c.accent;
-        ctx.font = '600 13px "Comic Neue", system-ui';
-        ctx.fillText(charText, 0, -8);
+        ctx.fillText(text, 0, -18);
+        
+        ctx.fillStyle = c.color;
+        ctx.font = '600 10px "Comic Neue", system-ui';
+        ctx.fillText(charText, 0, -6);
         ctx.restore();
       }
 

@@ -8,7 +8,7 @@ import { CharacterAvatar } from '../components/CharacterAvatar';
 import { WhaleLogo } from '../components/WhaleLogo';
 import { Users, Copy, Check, LogOut } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import PressConferencePng from '../assets/PressConference.png';
+import PressConferencePng from '../assets/PressConference.jpg';
 import { characterById } from '../game/characters';
 
 function randomCode() {

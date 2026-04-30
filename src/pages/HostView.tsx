@@ -6,9 +6,10 @@ import { VotingOverlay } from '../components/VotingOverlay';
 import { EndScreen } from '../components/EndScreen';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { WhaleLogo } from '../components/WhaleLogo';
-import { characterById } from '../game/characters';
 import { Users, Copy, Check, LogOut } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import PressConferencePng from '../assets/PressConference.png';
+import { characterById } from '../game/characters';
 
 function randomCode() {
   const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -201,13 +202,13 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
         </div>
       </div>
 
-      {state.bannerMessage && state.bannerUntil > performance.now() / 1000 && (
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-6 py-3 rounded-full shadow-lg">
-          {state.bannerMessage}
-        </div>
+      {state.phase === 'voting' && (
+        <>
+          <div className="absolute inset-0 bg-black/50 z-10" />
+          <img src={PressConferencePng} className="absolute inset-0 w-full h-full object-cover z-0" />
+          <VotingOverlay state={state} />
+        </>
       )}
-
-      {state.phase === 'voting' && <VotingOverlay state={state} />}
       {state.phase === 'ended' && <EndScreen state={state} onRematch={rematch} onLeave={onLeave} isHost />}
     </div>
   );

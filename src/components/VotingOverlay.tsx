@@ -12,7 +12,7 @@ export function VotingOverlay({ state }: { state: GameState }) {
   const alive = Object.values(state.players).filter((p) => p.boat.alive);
 
   return (
-    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 to-black/95 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-8">
+    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 to-black/50 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-8">
       <div className="flex items-center gap-3 mb-4">
         <Mic className="w-10 h-10 text-amber-400" />
         <h1 className="text-5xl font-black text-white tracking-tight">PRESSEKONFERENZ</h1>

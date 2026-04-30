@@ -168,6 +168,9 @@ export function GameCanvas({ state }: Props) {
         ctx.save();
         ctx.translate(w.x, w.y);
         ctx.rotate(w.heading);
+        if (Math.cos(w.heading) < 0) {
+          ctx.scale(1, -1);
+        }
         ctx.globalAlpha = w.hp < 30 ? 0.6 : w.hp < 15 ? 0.35 : 1;
         drawWhale(ctx, w, whalePhase);
         ctx.restore();
@@ -175,6 +178,7 @@ export function GameCanvas({ state }: Props) {
         if (w.hp > 40 && Math.sin(whalePhase * 1.2) > 0.7) {
           ctx.save();
           ctx.translate(w.x, w.y);
+          // Don't flip the spout when swimming left
           ctx.fillStyle = 'rgba(255,255,255,0.6)';
           ctx.beginPath();
           ctx.ellipse(0, -30, 4, 18, 0, 0, Math.PI * 2);
@@ -283,78 +287,78 @@ export function GameCanvas({ state }: Props) {
 
 function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], phase: number) {
   const bob = Math.sin(phase * 2) * 2;
-  const anim = Math.sin(phase * 2.2) * (whale.state === 'stranded' ? 0.2 : 1);
 
-  // Dorsal fin (draw behind body)
+  // Tail (fluke) - longer and more prominent
   ctx.fillStyle = '#a8b6c4';
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-15, -21 + bob);
-  ctx.bezierCurveTo(-15, -30 + bob, -22, -32 + bob, -25, -30 + bob);
-  ctx.bezierCurveTo(-22, -25 + bob, -22, -18 + bob, -22, -18 + bob);
-  ctx.closePath();
+  ctx.moveTo(-40, bob);
+  ctx.bezierCurveTo(-60, -5 + bob, -70, -20 + bob, -80, -25 + bob); // Top fluke tip
+  ctx.bezierCurveTo(-72, -10 + bob, -72, 10 + bob, -80, 25 + bob); // Bottom fluke tip
+  ctx.bezierCurveTo(-70, 20 + bob, -60, 5 + bob, -40, bob);
   ctx.fill();
   ctx.stroke();
 
-  // Main body shape
+  // Back Fin (Dorsal)
+  ctx.beginPath();
+  ctx.moveTo(-10, -20 + bob);
+  ctx.bezierCurveTo(-5, -35 + bob, 5, -30 + bob, 10, -20 + bob);
+  ctx.fill();
+  ctx.stroke();
+
+  // Main body (cute ellipse)
   ctx.fillStyle = '#a8b6c4';
   ctx.beginPath();
-  ctx.moveTo(45, 8 + bob); // Nose
-  ctx.bezierCurveTo(35, -10 + bob, -10, -25 + bob, -45, -6 + bob); // Back
-  
-  // Tail Fluke
-  ctx.bezierCurveTo(-55, -6 + bob, -60, -15 + bob + anim*2, -65, -20 + bob + anim*4); // Top tip
-  ctx.bezierCurveTo(-62, -10 + bob, -58, -5 + bob, -58, 0 + bob); // Center dip
-  ctx.bezierCurveTo(-58, 5 + bob, -62, 10 + bob, -65, 20 + bob - anim*4); // Bottom tip
-  ctx.bezierCurveTo(-60, 15 + bob - anim*2, -55, 6 + bob, -45, 6 + bob); // Bottom base
-  
-  // Belly
-  ctx.bezierCurveTo(-20, 30 + bob, 20, 30 + bob, 45, 8 + bob);
-  ctx.closePath();
+  ctx.ellipse(0, bob, 48, 24, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  // White belly and lower jaw
+  // White belly
   ctx.fillStyle = '#eaf0f6';
   ctx.beginPath();
-  ctx.moveTo(45, 8 + bob);
-  ctx.bezierCurveTo(20, 30 + bob, -20, 30 + bob, -45, 6 + bob);
-  ctx.bezierCurveTo(-20, 16 + bob, 25, 16 + bob, 45, 8 + bob);
-  ctx.closePath();
+  // Draw perfectly over the bottom half of the body
+  ctx.ellipse(0, bob, 48, 24, 0, 0, Math.PI, false);
+  ctx.bezierCurveTo(-20, 12 + bob, 20, 12 + bob, 48, bob);
   ctx.fill();
+  
+  // Soft line for the top edge of the belly
+  ctx.strokeStyle = '#8b9bb4';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-48, bob);
+  ctx.bezierCurveTo(-20, 12 + bob, 20, 12 + bob, 48, bob);
   ctx.stroke();
 
-  // Throat pleats/grooves
+  // Throat pleats (light blue/grey lines on belly)
   ctx.strokeStyle = '#a8b6c4';
   ctx.lineWidth = 1;
-  for(let i=1; i<=3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(35 - i*6, 12 + bob + i*1.5);
-    ctx.bezierCurveTo(15, 18 + bob + i*2, -10, 18 + bob + i*2, -30 + i*4, 12 + bob + i*1.5);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(-25, 12 + bob); ctx.quadraticCurveTo(0, 20 + bob, 35, 12 + bob);
+  ctx.moveTo(-20, 16 + bob); ctx.quadraticCurveTo(0, 23 + bob, 30, 16 + bob);
+  ctx.moveTo(-10, 20 + bob); ctx.quadraticCurveTo(0, 25 + bob, 20, 20 + bob);
+  ctx.stroke();
 
-  // Flipper (pectoral fin)
+  // Flipper (Pectoral fin)
   ctx.fillStyle = '#a8b6c4';
   ctx.strokeStyle = '#374151';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(8, 17 + bob);
-  ctx.bezierCurveTo(-5, 35 + bob, -15, 45 + bob, -20, 40 + bob);
-  ctx.bezierCurveTo(-12, 30 + bob, -2, 22 + bob, 2, 15 + bob);
+  ctx.moveTo(5, 15 + bob);
+  ctx.bezierCurveTo(-5, 30 + bob, -15, 45 + bob, -5, 40 + bob);
+  ctx.bezierCurveTo(5, 35 + bob, 15, 25 + bob, 15, 15 + bob);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Tubercles (bumps) exactly on the line
+  // Bumps on face (Tubercles)
   ctx.fillStyle = '#a8b6c4';
+  ctx.strokeStyle = '#374151';
   ctx.lineWidth = 1.5;
   const bumps = [
-    {x: 40, y: 2},
-    {x: 32, y: -6},
-    {x: 22, y: -13},
-    {x: 10, y: -18}
+    {x: 45, y: -8},
+    {x: 38, y: -15},
+    {x: 28, y: -20},
   ];
   for (const b of bumps) {
     ctx.beginPath();
@@ -363,20 +367,9 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
     ctx.stroke();
   }
 
-  // Expression logic
-  let eyeBrowTranslate = 2;
-  let mouthEndY = 12;
-  if (whale.state === 'stranded' || whale.hp < 30) {
-    mouthEndY = 4;
-    eyeBrowTranslate = -1;
-  } else if (whale.hp < 60) {
-    mouthEndY = 8;
-    eyeBrowTranslate = 1;
-  }
-
   // Eye
-  const eyeX = 22;
-  const eyeY = 0 + bob;
+  const eyeX = 26;
+  const eyeY = -4 + bob;
   ctx.fillStyle = '#fff';
   ctx.beginPath();
   ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2);
@@ -386,20 +379,26 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
   ctx.arc(eyeX + 1, eyeY, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Eyebrow
+  // Emotion / Mouth
   ctx.strokeStyle = '#374151';
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(eyeX - 3, eyeY - 4 + eyeBrowTranslate);
-  ctx.bezierCurveTo(eyeX, eyeY - 5 + eyeBrowTranslate, eyeX + 3, eyeY - 4 + eyeBrowTranslate, eyeX + 4, eyeY - 3 + eyeBrowTranslate);
-  ctx.stroke();
-
-  // Mouth
-  ctx.strokeStyle = '#374151';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(45, 8 + bob);
-  ctx.bezierCurveTo(35, 18 + bob, 15, 16 + bob, 5, mouthEndY + bob);
+  
+  if (whale.state === 'stranded') {
+    // Wiggly mouth ~
+    ctx.moveTo(18, 8 + bob);
+    ctx.quadraticCurveTo(23, 4 + bob, 28, 8 + bob);
+    ctx.quadraticCurveTo(33, 12 + bob, 38, 8 + bob);
+  } else if (whale.hp < 30) {
+    // Sad mouth :(
+    ctx.moveTo(22, 10 + bob);
+    ctx.quadraticCurveTo(30, 4 + bob, 38, 10 + bob);
+  } else {
+    // Happy mouth :)
+    ctx.moveTo(22, 6 + bob);
+    ctx.quadraticCurveTo(30, 14 + bob, 38, 6 + bob);
+  }
   ctx.stroke();
 }
 

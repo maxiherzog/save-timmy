@@ -272,7 +272,7 @@ function updateWhale(state: GameState, dt: number) {
     }
   }
 
-  const hpMul = w.hp < 10 ? 0.15 : w.hp < 30 ? 0.5 : 1;
+  const hpMul = w.hp < 10 ? 0.5 : w.hp < 30 ? 0.75 : 1;
   const panicMul = w.panicTimer > 0 ? 1.8 : 1; // Speed up when panicked
   const baseSpeed = 28 * hpMul * panicMul;
 

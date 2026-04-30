@@ -148,8 +148,8 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
     const bb = bbox(sb.poly);
     const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
     
-    // Density: roughly one decoration per 2500 square units for coast, less for sandbanks
-    const count = Math.floor((area / (isCoast ? 2000 : 4000)) * (0.8 + rng() * 0.4));
+    // Toned down density for "patches" feel
+    const count = Math.floor((area / (isCoast ? 500 : 1000)) * (0.8 + rng() * 0.4));
     
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -159,13 +159,13 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
 
         if (pointInPoly(x, y, sb.poly)) {
           let asset = '';
-          let scale = 0.8 + rng() * 0.4;
+          let scale = 0.05 + rng() * 0.02; // Roughly 5% of previous size (which was ~1.0)
           
           if (isCoast) {
             const roll = rng();
-            if (!lighthousePlaced && roll < 0.02) {
+            if (!lighthousePlaced && roll < 0.01) {
               asset = DECORATION_ASSETS.house;
-              scale = 1.2;
+              scale = 0.08; // Even smaller lighthouse
               lighthousePlaced = true;
             } else if (roll < 0.5) {
               asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
@@ -175,10 +175,10 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
               asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
             } else if (roll < 0.95) {
               asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
-              scale = 0.9 + rng() * 0.5;
+              scale = 0.08 + rng() * 0.04;
             } else {
               asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.3 + rng() * 0.2;
+              scale = 0.03 + rng() * 0.02;
             }
           } else {
             // Inner sandbanks: mostly pebbles and stones, few shells
@@ -189,17 +189,19 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
               asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
             } else {
               asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-              scale = 0.3 + rng() * 0.2;
+              scale = 0.02 + rng() * 0.01;
             }
           }
 
           if (asset) {
+            // Max 2 degrees rotation = 2 * Math.PI / 180 = ~0.035 rad
+            const maxRot = 2 * (Math.PI / 180);
             sb.decorations.push({
               asset,
               x,
               y,
               scale,
-              rotation: rng() * Math.PI * 2,
+              rotation: (rng() - 0.5) * 2 * maxRot,
               mirrored: rng() > 0.5,
             });
           }

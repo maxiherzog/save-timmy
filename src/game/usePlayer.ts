@@ -9,11 +9,15 @@ import {
   type SecretRole,
 } from './net';
 
+type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
+export type { ConnectionStatus };
+
 export function usePlayer(code: string, playerId: string, name: string) {
   const [state, setState] = useState<GameState | null>(null);
   const [role, setRole] = useState<SecretRole | null>(null);
   const [assignments, setAssignments] = useState<Record<string, CharacterId>>({});
   const [ping, setPing] = useState<number>(0);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
   const pingRef = useRef(ping);
   useEffect(() => {
     pingRef.current = ping;
@@ -26,51 +30,76 @@ export function usePlayer(code: string, playerId: string, name: string) {
   useEffect(() => {
     if (!code || !playerId || !name) return;
 
-    const ch = subscribeRoom(code, {
-      onEvent: (e) => {
-        if (e.type === 'pong' && e.playerId === playerId) {
-          setPing(performance.now() - e.t);
+    function connect() {
+      if (chRef.current) supabase.removeChannel(chRef.current);
+      if (privateRef.current) supabase.removeChannel(privateRef.current);
+
+      setConnectionStatus('connecting');
+
+      const ch = subscribeRoom(code, {
+        onEvent: (e) => {
+          if (e.type === 'pong' && e.playerId === playerId) {
+            setPing(performance.now() - e.t);
+          }
+        },
+        onState: (msg) => setState(msg.state as GameState),
+        onAssignments: (list) => {
+          const map: Record<string, CharacterId> = {};
+          for (const a of list) map[a.playerId] = a.characterId;
+          setAssignments(map);
+        },
+      });
+
+      ch.on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        if ((payload as any).status === 'SUBSCRIBED') {
+          setConnectionStatus('connected');
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(ch.state)) {
+          setConnectionStatus('disconnected');
         }
-      },
-      onState: (msg) => setState(msg.state as GameState),
-      onAssignments: (list) => {
-        const map: Record<string, CharacterId> = {};
-        for (const a of list) map[a.playerId] = a.characterId;
-        setAssignments(map);
-      },
-    });
-    chRef.current = ch;
+      });
+      
+      chRef.current = ch;
 
-    const priv = subscribePrivate(code, playerId, (r) => setRole(r));
-    privateRef.current = priv;
+      const priv = subscribePrivate(code, playerId, (r) => setRole(r));
+      privateRef.current = priv;
 
-    // Announce join after channel subscribes
-    const announce = setInterval(() => {
-      if ((ch as any).state === 'joined') {
-        sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
-        sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
-        clearInterval(announce);
-      }
-    }, 200);
+      // Announce join after channel subscribes
+      const announce = setInterval(() => {
+        if (ch.state === 'joined') {
+          sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
+          sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
+          clearInterval(announce);
+        }
+      }, 200);
+    }
+    
+    connect();
 
     // Heartbeat input
     const heartbeat = setInterval(() => {
-      if (chRef.current) {
+      if (chRef.current && chRef.current.state === 'joined') {
         sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current }, ping: pingRef.current }).catch(() => {});
       }
     }, 100);
 
     // Ping loop
     const pingLoop = setInterval(() => {
-      if (chRef.current && (chRef.current as any).state === 'joined') {
+      if (chRef.current && chRef.current.state === 'joined') {
         sendEvent(chRef.current, { type: 'ping', playerId, t: performance.now() }).catch(() => {});
       }
     }, 1000);
 
+    const reconLoop = setInterval(() => {
+      if (chRef.current?.state !== 'joined') {
+        setConnectionStatus('disconnected');
+        connect();
+      }
+    }, 5000);
+
     return () => {
-      clearInterval(announce);
       clearInterval(heartbeat);
       clearInterval(pingLoop);
+      clearInterval(reconLoop);
       if (chRef.current) {
         sendEvent(chRef.current, { type: 'leave', playerId }).catch(() => {});
         supabase.removeChannel(chRef.current);
@@ -95,5 +124,5 @@ export function usePlayer(code: string, playerId: string, name: string) {
     if (chRef.current) sendEvent(chRef.current, { type: 'ready', playerId }).catch(() => {});
   }
 
-  return { state, role, assignments, ping, setInput, pressConference, vote, ready };
+  return { state, role, assignments, ping, setInput, pressConference, vote, ready, connectionStatus };
 }

@@ -66,10 +66,13 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
       last = now;
       const s = stateRef.current;
       if (s) {
-        // prune disconnected players after 30s
+        // prune disconnected players after 30s, but mark as disconnected after 5s
         const nowSec = now / 1000;
         for (const p of Object.values(s.players)) {
-          if (!p.connected && nowSec - p.lastSeen > 30) {
+          if (p.connected && nowSec - p.lastSeen > 5) {
+            p.connected = false;
+          }
+          if (nowSec - p.lastSeen > 30) {
             delete s.players[p.id];
           }
         }

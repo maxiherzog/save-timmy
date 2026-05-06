@@ -249,6 +249,23 @@ export function GameCanvas({ state }: Props) {
         ctx.textAlign = 'center';
         ctx.strokeText('TIMMY', w.x, w.y - 40);
         ctx.fillText('TIMMY', w.x, w.y - 40);
+
+        // Barge progress bar
+        if (w.bargeTimer > 0) {
+          const barW = 100;
+          const barH = 12;
+          const progress = Math.min(1, w.bargeTimer / 3);
+          
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.fillRect(w.x - barW / 2, w.y - 35, barW, barH);
+          
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(w.x - barW / 2, w.y - 35, barW * progress, barH);
+          
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(w.x - barW / 2, w.y - 35, barW, barH);
+        }
       } else {
         ctx.save();
         ctx.globalAlpha = 0.5;

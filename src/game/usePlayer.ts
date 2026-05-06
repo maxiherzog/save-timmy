@@ -12,12 +12,16 @@ import {
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
 export type { ConnectionStatus };
 
+type ConnectionStatus = 'connected' | 'connecting' | 'disconnected';
+export type { ConnectionStatus };
+
 export function usePlayer(code: string, playerId: string, name: string) {
   const [state, setState] = useState<GameState | null>(null);
   const [role, setRole] = useState<SecretRole | null>(null);
   const [assignments, setAssignments] = useState<Record<string, CharacterId>>({});
   const [ping, setPing] = useState<number>(0);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
+  const lastStateVersion = useRef(0);
   const pingRef = useRef(ping);
   useEffect(() => {
     pingRef.current = ping;
@@ -27,7 +31,6 @@ export function usePlayer(code: string, playerId: string, name: string) {
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
 
-  const lastStateVersion = useRef(0);
   useEffect(() => {
     if (!code || !playerId || !name) return;
 
@@ -42,6 +45,95 @@ export function usePlayer(code: string, playerId: string, name: string) {
           if (e.type === 'pong' && e.playerId === playerId) {
             setPing(performance.now() - e.t);
           }
+        },
+        onState: (msg) => {
+          const newState = msg.state as GameState;
+          if (lastStateVersion.current !== 0 && newState.version < lastStateVersion.current) {
+            // Stale state, ignore
+            return;
+          }
+          if (lastStateVersion.current !== 0 && newState.version > lastStateVersion.current + 1) {
+            // We missed a state, request a full one
+            sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
+          }
+          setState(newState);
+          lastStateVersion.current = newState.version;
+        },
+        onAssignments: (list) => {
+          const map: Record<string, CharacterId> = {};
+          for (const a of list) map[a.playerId] = a.characterId;
+          setAssignments(map);
+        },
+      });
+
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected');
+          sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
+          sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+          setConnectionStatus('disconnected');
+        }
+      });
+      
+      chRef.current = ch;
+
+      const priv = subscribePrivate(code, playerId, (r) => setRole(r));
+      privateRef.current = priv;
+    }
+    
+    connect();
+
+    // Heartbeat input
+    const heartbeat = setInterval(() => {
+      if (chRef.current && chRef.current.state === 'joined') {
+        sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current }, ping: pingRef.current }).catch(() => {});
+      }
+    }, 100);
+
+    // Ping loop
+    const pingLoop = setInterval(() => {
+      if (chRef.current && chRef.current.state === 'joined') {
+        sendEvent(chRef.current, { type: 'ping', playerId, t: performance.now() }).catch(() => {});
+      }
+    }, 1000);
+
+    const reconLoop = setInterval(() => {
+      if (chRef.current?.state === 'closed' || chRef.current?.state === 'errored') {
+        connect();
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(heartbeat);
+      clearInterval(pingLoop);
+      clearInterval(reconLoop);
+      if (chRef.current) {
+        sendEvent(chRef.current, { type: 'leave', playerId }).catch(() => {});
+        supabase.removeChannel(chRef.current);
+      }
+      if (privateRef.current) supabase.removeChannel(privateRef.current);
+    };
+  }, [code, playerId, name]);
+
+  function setInput(input: Partial<PlayerInput>) {
+    inputRef.current = { ...inputRef.current, ...input };
+  }
+
+  function pressConference() {
+    if (chRef.current) sendEvent(chRef.current, { type: 'press-conference', playerId }).catch(() => {});
+  }
+
+  function vote(targetId: string) {
+    if (chRef.current) sendEvent(chRef.current, { type: 'vote', playerId, targetId }).catch(() => {});
+  }
+
+  function ready() {
+    if (chRef.current) sendEvent(chRef.current, { type: 'ready', playerId }).catch(() => {});
+  }
+
+  return { state, role, assignments, ping, setInput, pressConference, vote, ready, connectionStatus };
+}
         },
         onState: (msg) => {
           const newState = msg.state as GameState;

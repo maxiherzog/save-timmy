@@ -147,7 +147,16 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
   };
 }
 
-function makeCoastBank(side: 'top' | 'bottom' | 'left' | 'right', start: number, end: number, dMin: number, dMax: number, rng: () => number, visible = true, depthProfile?: (t: number) => number): Sandbank {
+function makeCoastBank(
+  side: 'top' | 'bottom' | 'left' | 'right',
+  start: number,
+  end: number,
+  dMin: number,
+  dMax: number,
+  rng: () => number,
+  visible = true,
+  depthProfile?: (t: number) => number,
+): Sandbank {
   const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng, depthProfile);
   const bb = bbox(poly);
   return {
@@ -314,8 +323,13 @@ export function createMap(seed: number): Sandbank[] {
     return 0;
   }));
   
-  sandbanks.push(makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false));
-  sandbanks.push(makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false));
+  const leftWall = makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false);
+  leftWall.visible = false;
+  sandbanks.push(leftWall);
+
+  const rightWall = makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false);
+  rightWall.visible = false;
+  sandbanks.push(rightWall);
 
   // 2. Generate random inner sandbanks
   const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks

@@ -133,6 +133,9 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
       if (chRef.current) sendState(chRef.current, s).catch(() => {});
     } else if (e.type === 'press-conference') {
       startVote(s, e.playerId, now);
+      // Force a broadcast immediately after starting a vote
+      if (chRef.current) sendState(chRef.current, s).catch(() => {});
+      setState({ ...s });
     } else if (e.type === 'vote') {
       castVote(s, e.playerId, e.targetId);
     } else if (e.type === 'start' && e.token === hostToken) {

@@ -490,7 +490,7 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
               const dist = Math.sqrt(dx * dx + dy * dy) || 1;
               const nx = dx / dist;
               const ny = dy / dist;
-              const bumpForce = 220;
+              const bumpForce = 150; // was 220
               p1.boat.vx += nx * bumpForce;
               p1.boat.vy += ny * bumpForce;
               p2.boat.vx -= nx * bumpForce;

@@ -172,10 +172,16 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
   boat.trampelnCooldown = Math.max(0, boat.trampelnCooldown - dt);
   boat.ramCooldown = Math.max(0, boat.ramCooldown - dt);
   boat.trampelnStamina = Math.min(TRAMPELN_STAMINA_MAX, boat.trampelnStamina + TRAMPELN_REGEN * dt);
-  // 5. Wakes
-    if (currentSpeed > 30 && Math.random() < 0.07) {
-      // Spawn at the center (thickest point)
-      state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: boat.heading });
+    // 5. Wakes & Sand
+    if (onShallow) {
+      if (currentSpeed > 10 && Math.random() < 0.2) {
+        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: boat.x + (Math.random() - 0.5) * 20, y: boat.y + (Math.random() - 0.5) * 20, t: now });
+      }
+    } else {
+      if (currentSpeed > 30 && Math.random() < 0.07) {
+        // Spawn at the center (thickest point)
+        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: boat.heading });
+      }
     }
 
   handleBargeCollision(boat, BOAT_RADIUS, state);
@@ -316,11 +322,17 @@ function updateWhale(state: GameState, dt: number) {
     w.x += Math.cos(w.heading) * baseSpeed * dt;
     w.y += Math.sin(w.heading) * baseSpeed * dt;
     
-    // Wakes
+    // Wakes & Sand
+    if (shallow) {
+      if (Math.random() < 0.15) {
+        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 40, y: w.y + (Math.random() - 0.5) * 40, t: performance.now() / 1000 });
+      }
+    } else {
       if (baseSpeed > 5 && Math.random() < 0.05) {
         // Spawn at the center
         state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x, y: w.y, t: performance.now() / 1000, heading: w.heading });
       }
+    }
   }
   
   // Hard boundaries as safety

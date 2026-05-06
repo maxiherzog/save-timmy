@@ -4,7 +4,7 @@ import { MAP_W, MAP_H, HEAL_ZONES, DOCK_ZONE } from '../game/map';
 import { Heart } from 'lucide-react';
 import { characterById } from '../game/characters';
 import { WHALE_MAX_HP, HEAL_RATE_PER_SEC } from '../game/types';
-import starsSvg from '../assets/stars.svg';
+import starsSvg from '../assets/stars.svg?url';
 
 const starsImg = new Image();
 starsImg.src = starsSvg;
@@ -267,7 +267,8 @@ export function GameCanvas({ state }: Props) {
         ctx.translate(p.boat.x, p.boat.y);
         ctx.rotate(p.boat.heading);
         
-        const isStunned = now < p.boat.stunnedUntil;
+        const nowSec = now / 1000;
+        const isStunned = nowSec < p.boat.stunnedUntil;
 
         // Visual Rudder (steering indicator)
         ctx.save();
@@ -312,7 +313,7 @@ export function GameCanvas({ state }: Props) {
         if (isStunned) {
           ctx.save();
           ctx.translate(p.boat.x, p.boat.y - 30);
-          ctx.rotate(now * 5);
+          ctx.rotate(nowSec * 5);
           ctx.drawImage(starsImg, -16, -16, 32, 32);
           ctx.restore();
         }
@@ -585,6 +586,18 @@ function drawFxAbove(ctx: CanvasRenderingContext2D, state: GameState) {
         ctx.arc(fx.x + Math.cos(angle) * dist, fx.y + Math.sin(angle) * dist, size, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
+    } else if (fx.kind === 'sand') {
+      ctx.save();
+      const life = Math.max(0, 1 - age / 0.6);
+      ctx.globalAlpha = life * 0.7;
+      ctx.fillStyle = '#e5c99f'; // Sand color
+      ctx.beginPath();
+      // Drift upwards slightly and grow
+      const dy = age * -15;
+      const size = 3 + age * 8;
+      ctx.arc(fx.x, fx.y + dy, size, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     } else if (fx.kind === 'blow') {
       ctx.save();

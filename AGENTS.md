@@ -4,52 +4,38 @@ This document provides essential information for agents working on this reposito
 
 ## Project Overview
 
-This is a local multiplayer party game built with React, TypeScript, Vite, and Tailwind CSS. The backend, including real-time features and database, is handled by Supabase.
+This is a local multiplayer party game built with React, TypeScript, Vite, and Tailwind CSS. The backend, including real-time features and database, is handled by Supabase. The game is designed to be hosted from any device with a browser (e.g., an iPad) and played by others on the local network using their phones as controllers.
 
 ## Key Scripts
 
-The following are the most important scripts defined in `package.json`:
+- **`npm run dev`**: Starts the Vite dev server. The `base` path is correctly set to `/` for this command.
+- **`npm run dev:host`**: Exposes the dev server to the local network for testing with mobile controllers.
+- **`npm run lint`**: Lints the codebase.
+- **`npm run typecheck`**: Runs the TypeScript compiler for type-checking.
+- **`npm run build`**: Builds the app for production. The `base` path is correctly set to `/save-timmy/` for this command.
 
-- **`npm run dev`**: Starts the Vite development server for the main application.
-- **`npm run dev:host`**: Starts the development server and exposes it to the local network. This is crucial for testing the mobile-as-controller functionality.
-- **`npm run lint`**: Lints the entire codebase using ESLint.
-- **`npm run typecheck`**: Runs the TypeScript compiler to check for type errors.
-- **`npm run build`**: Builds the application for production.
-
-**Note:** There is no dedicated test script in `package.json`.
+**Note:** There is no dedicated test script.
 
 ## Development Workflow
 
-To set up and run this project locally, follow these steps:
+1.  **Install:** `npm install`
+2.  **Set up `.env`:** Create a `.env` file with your Supabase URL and anon key.
+3.  **Set up Supabase:**
+    - `npx supabase login`
+    - `npx supabase link --project-ref YOUR_PROJECT_ID`
+    - `npx supabase db push`
+    - `npx supabase functions deploy`
+4.  **Run:** `npm run dev` or `npm run dev:host`.
 
-1.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+## Architecture & Performance Notes
 
-2.  **Set up Supabase:**
-    - This project requires a Supabase backend. You will need a Supabase account.
-    - Create a `.env` file in the root of the project with your Supabase URL and anon key:
-      ```env
-      VITE_SUPABASE_URL=https://your-project-id.supabase.co
-      VITE_SUPABASE_ANON_KEY=your-long-anon-public-key
-      ```
-    - Use the Supabase CLI to manage the database schema and edge functions:
-      - `npx supabase login`
-      - `npx supabase link --project-ref YOUR_PROJECT_ID`
-      - `npx supabase db push`
-      - `npx supabase functions deploy`
+- **CRITICAL: Supabase Payload Optimization:** The single most important performance factor is the size of the real-time payload sent from the host to the players. Previously, sending the entire game state (including static map geometry) caused severe latency (>100ms) and disconnects.
+  - **The Solution:** In `src/game/net.ts`, the `sendState` function now strips all non-essential data (e.g., `sandbanks`, `whale`, `fx`) before broadcasting. Players only receive the data they need for their UI (phase, player list, etc.). **Maintain this optimization.** Do not send unnecessary data to player clients.
 
-3.  **Run the Development Server:**
-    ```bash
-    npm run dev
-    ```
-    Or, to test with mobile controllers:
-    ```bash
-    npm run dev:host
-    ```
+- **Mobile as Controller & Multitouch:**
+  - The game is designed for players to use their phones. The `dev:host` script is crucial for testing this.
+  - **The Fix:** Controller components (`src/controller/*.tsx`) must track the specific `pointerId` of each touch event. This prevents bugs where one action (e.g., pressing a button) would incorrectly cancel another (e.g., steering). This is essential for robust multi-touch input.
 
-## Architecture Notes
-
-- **Mobile as Controller:** The game is designed to be played with a central screen (PC/TV) hosting the game, and players using their smartphones as controllers. This is why the `dev:host` script is important.
-- **Supabase Integration:** Supabase is used for the database, real-time communication via channels, and serverless edge functions.
+- **Vite `base` Configuration:**
+  - In `vite.config.ts`, the `base` path is conditionally set: `/` for local development (`serve`) and `/save-timmy/` for production (`build`).
+  - Correspondingly, all asset paths in `index.html` (icons, manifest, etc.) **must be root-absolute** (e.g., `/favicon.ico`) to work correctly in both environments.

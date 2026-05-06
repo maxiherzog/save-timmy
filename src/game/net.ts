@@ -74,7 +74,11 @@ export async function sendEvent(ch: RealtimeChannel, e: NetEvent) {
   await ch.send({ type: 'broadcast', event: 'event', payload: e });
 }
 
-export async function sendState(ch: RealtimeChannel, state: GameState) {
+export async function sendState(ch: RealtimeChannel, state: GameState, forceFull = false) {
+  if (forceFull) {
+    await ch.send({ type: 'broadcast', event: 'state', payload: { type: 'state', state } });
+    return;
+  }
   const clean = { ...state } as any;
   delete clean.sandbanks;
   delete clean.whale;

@@ -47,10 +47,11 @@ export function createInitialState(code: string, impostersCount: number = 1): Ga
   const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const sandbanks = createMap(seed);
   return {
+    version: 0,
     code,
     phase: 'lobby',
-    playTime: 0,
     countdownUntil: 0,
+    playTime: 0,
     impostersCount,
     players: {},
     whale: createInitialWhale(),

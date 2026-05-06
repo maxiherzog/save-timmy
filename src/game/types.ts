@@ -102,6 +102,7 @@ export type VoteState = {
 };
 
 export type GameState = {
+  version: number;
   code: string;
   phase: 'lobby' | 'starting' | 'ready' | 'countdown' | 'playing' | 'voting' | 'ended';
   countdownUntil: number;

@@ -27,6 +27,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
 
+  const lastStateVersion = useRef(0);
   useEffect(() => {
     if (!code || !playerId || !name) return;
 
@@ -42,7 +43,15 @@ export function usePlayer(code: string, playerId: string, name: string) {
             setPing(performance.now() - e.t);
           }
         },
-        onState: (msg) => setState(msg.state as GameState),
+        onState: (msg) => {
+          const newState = msg.state as GameState;
+          if (newState.version > lastStateVersion.current + 1) {
+            // We missed a state, request a full one
+            sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
+          }
+          setState(newState);
+          lastStateVersion.current = newState.version;
+        },
         onAssignments: (list) => {
           const map: Record<string, CharacterId> = {};
           for (const a of list) map[a.playerId] = a.characterId;
@@ -53,6 +62,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
       ch.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
+          sendEvent(ch, { type: 'request-state', playerId }).catch(() => {}); // Request initial state
         } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           setConnectionStatus('disconnected');
         }
@@ -67,10 +77,9 @@ export function usePlayer(code: string, playerId: string, name: string) {
       const announce = setInterval(() => {
         if (ch.state === 'joined') {
           sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
-          sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
           clearInterval(announce);
         }
-      }, 200);
+      }, 500);
     }
     
     connect();

@@ -121,8 +121,8 @@ export function GameCanvas({ state }: Props) {
           ctx.closePath();
           // Per-bank pulsing phase
           const bankPhase = whalePhase * 1.5 + (sb.x * 0.1 + sb.y * 0.2);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(bankPhase) * 0.2})`;
-          ctx.lineWidth = 8 + Math.sin(bankPhase * 0.8) * 6;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + Math.sin(bankPhase) * 0.3})`;
+          ctx.lineWidth = 10 + Math.sin(bankPhase * 0.8) * 8;
           ctx.stroke();
           ctx.restore();
 

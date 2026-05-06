@@ -178,7 +178,7 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
         state.fx.push({ id: fxIdCounter++, kind: 'sand', x: boat.x + (Math.random() - 0.5) * 20, y: boat.y + (Math.random() - 0.5) * 20, t: now });
       }
     } else {
-      if (currentSpeed > 30 && Math.random() < 0.07) {
+      if (currentSpeed > 30 && Math.random() < 0.001*currentSpeed) {
         // Spawn at the center (thickest point)
         state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: boat.heading });
       }

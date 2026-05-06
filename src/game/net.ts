@@ -75,7 +75,15 @@ export async function sendEvent(ch: RealtimeChannel, e: NetEvent) {
 }
 
 export async function sendState(ch: RealtimeChannel, state: GameState) {
-  const { ['_imposterId' as any]: _imp, ...clean } = state as any;
+  const clean = { ...state } as any;
+  delete clean.sandbanks;
+  delete clean.whale;
+  delete clean.healZones;
+  delete clean.barge;
+  delete clean.fx;
+  delete clean.bargeDrift;
+  delete clean['_imposterIds'];
+
   await ch.send({ type: 'broadcast', event: 'state', payload: { type: 'state', state: clean } });
 }
 

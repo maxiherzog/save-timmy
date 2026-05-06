@@ -8,16 +8,17 @@ type Props = {
 export function SteeringSlider({ onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(0); // -1 to 1
-  const active = useRef(false);
+  const active = useRef<number | null>(null);
 
   useEffect(() => {
     function pos(e: PointerEvent) {
       if (!ref.current) return;
+      if (active.current !== null && e.pointerId !== active.current) return;
       const rect = ref.current.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       // Handle is 64px wide (w-16). Max travel from center is (width - 64) / 2.
       const max = (rect.width - 64) / 2;
-      let dx = e.clientX - cx;
+      const dx = e.clientX - cx;
       
       let val = dx / max;
       val = Math.max(-1, Math.min(1, val));
@@ -28,19 +29,19 @@ export function SteeringSlider({ onChange }: Props) {
 
     function down(e: PointerEvent) {
       if (!ref.current) return;
-      active.current = true;
+      active.current = e.pointerId;
       (e.target as Element).setPointerCapture?.(e.pointerId);
       pos(e);
     }
 
     function move(e: PointerEvent) {
-      if (!active.current) return;
+      if (active.current === null || e.pointerId !== active.current) return;
       pos(e);
     }
 
-    function up() {
-      if (!active.current) return;
-      active.current = false;
+    function up(e: PointerEvent) {
+      if (active.current === null || e.pointerId !== active.current) return;
+      active.current = null;
       setValue(0);
       onChange(0);
     }

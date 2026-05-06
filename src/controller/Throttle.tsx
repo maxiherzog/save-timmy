@@ -8,14 +8,15 @@ type Props = {
 export function Throttle({ onChange, height = 200 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(0); // 0 to 1
-  const active = useRef(false);
+  const active = useRef<number | null>(null);
 
   useEffect(() => {
     function pos(e: PointerEvent) {
       if (!ref.current) return;
+      if (active.current !== null && e.pointerId !== active.current) return;
       const rect = ref.current.getBoundingClientRect();
       // Y is inverted (0 is bottom, 1 is top)
-      let relativeY = rect.bottom - e.clientY;
+      const relativeY = rect.bottom - e.clientY;
       let val = relativeY / rect.height;
       val = Math.max(0, Math.min(1, val));
       
@@ -37,19 +38,19 @@ export function Throttle({ onChange, height = 200 }: Props) {
         e.clientY > rect.bottom + 20
       )
         return;
-      active.current = true;
+      active.current = e.pointerId;
       (e.target as Element).setPointerCapture?.(e.pointerId);
       pos(e);
     }
 
     function move(e: PointerEvent) {
-      if (!active.current) return;
+      if (active.current === null || e.pointerId !== active.current) return;
       pos(e);
     }
 
-    function up() {
-      if (!active.current) return;
-      active.current = false;
+    function up(e: PointerEvent) {
+      if (active.current === null || e.pointerId !== active.current) return;
+      active.current = null;
     }
 
     const el = ref.current!;

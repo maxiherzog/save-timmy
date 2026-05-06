@@ -73,13 +73,13 @@ export function GameCanvas({ state }: Props) {
       ctx.fillRect(0, 0, MAP_W, MAP_H);
 
       // ambient waves
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 150; i++) {
-        const x = (whalePhase * 20 + i * 137) % MAP_W;
-        const y = (whalePhase * 15 + i * 193) % MAP_H;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 300; i++) {
+        const x = (whalePhase * 15 + i * 137) % MAP_W;
+        const y = (whalePhase * 10 + i * 193) % MAP_H;
         ctx.beginPath();
-        ctx.arc(x, y, 5 + Math.sin(whalePhase * 3 + i) * 3, 0, Math.PI);
+        ctx.arc(x, y, 6 + Math.sin(whalePhase * 2 + i) * 4, 0, Math.PI);
         ctx.stroke();
       }
       
@@ -540,20 +540,19 @@ function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
     const age = now - fx.t;
     if (fx.kind === 'wake') {
       ctx.save();
-      ctx.globalAlpha = Math.max(0, 0.6 - age * 0.2); // Lasts longer, fades slower
+      ctx.globalAlpha = Math.max(0, 0.5 - age * 0.25);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2 + age * 2;
       ctx.translate(fx.x, fx.y);
-      ctx.rotate(fx.heading! + Math.PI / 2);
+      ctx.rotate(fx.heading!);
       
-      // Expand V shape faster/larger
-      const spread = age * 60;
-      const length = 20 + age * 40;
+      const spread = 10 + age * 45;
+      const length = 15 + age * 60;
       
       ctx.beginPath();
-      ctx.moveTo(-spread, -length);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(spread, -length);
+      ctx.moveTo(-length, -spread);
+      ctx.quadraticCurveTo(-length * 0.4, -spread * 0.3, 0, 0);
+      ctx.quadraticCurveTo(-length * 0.4, spread * 0.3, -length, spread);
       ctx.stroke();
       ctx.restore();
     }

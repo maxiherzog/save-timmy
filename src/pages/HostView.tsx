@@ -192,25 +192,19 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
         </div>
       )}
 
-      <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-4 py-3 max-w-xs">
-        <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-semibold">Spieler</div>
-        <div className="space-y-1.5">
-          {players.map((p) => {
-            const ch = characterById(p.characterId);
-            return (
-              <div key={p.id} className={`flex items-center gap-2 text-sm ${p.boat.alive ? '' : 'opacity-40 line-through'}`}>
-                <div
-                  className="w-5 h-5 rounded-full border-2"
-                  style={{
-                    backgroundColor: ch.color,
-                    borderColor: ch.accent
-                  }}
-                />
-                <span className="font-semibold truncate">{p.name}</span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2 max-w-4xl px-4 z-10 pointer-events-none">
+        {players.map((p) => {
+          const ch = characterById(p.characterId);
+          return (
+            <div key={p.id} className={`flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-full px-3 py-1.5 text-sm shadow-lg ${p.boat.alive ? '' : 'opacity-40 grayscale'}`}>
+              <div
+                className="w-4 h-4 rounded-full border border-white/20"
+                style={{ backgroundColor: ch.color }}
+              />
+              <span className="font-semibold text-white truncate max-w-[120px]">{p.name}</span>
+            </div>
+          );
+        })}
       </div>
 
       {state.phase === 'voting' && (

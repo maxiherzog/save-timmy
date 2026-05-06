@@ -50,10 +50,10 @@ export function usePlayer(code: string, playerId: string, name: string) {
         },
       });
 
-      ch.on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        if ((payload as any).status === 'SUBSCRIBED') {
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
-        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(ch.state)) {
+        } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           setConnectionStatus('disconnected');
         }
       });
@@ -90,11 +90,11 @@ export function usePlayer(code: string, playerId: string, name: string) {
     }, 1000);
 
     const reconLoop = setInterval(() => {
-      if (chRef.current?.state !== 'joined') {
+      if (chRef.current?.state !== 'joined' && chRef.current?.state !== 'joining') {
         setConnectionStatus('disconnected');
         connect();
       }
-    }, 5000);
+    }, 3000);
 
     return () => {
       clearInterval(heartbeat);

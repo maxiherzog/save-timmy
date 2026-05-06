@@ -325,7 +325,7 @@ function updateWhale(state: GameState, dt: number) {
     // Wakes & Sand
     if (shallow) {
       if (Math.random() < 0.15) {
-        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 40, y: w.y + (Math.random() - 0.5) * 40, t: performance.now() / 1000 });
+        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 80, y: w.y + (Math.random() - 0.5) * 80, t: performance.now() / 1000 });
       }
     } else {
       if (baseSpeed > 5 && Math.random() < 0.05) {

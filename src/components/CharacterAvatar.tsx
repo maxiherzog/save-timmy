@@ -17,7 +17,7 @@ export function CharacterAvatar({ characterId, size = 48, showName = false }: Pr
           height: size,
           background: c.color,
           borderColor: c.accent,
-          color: '#fff',
+          color: '#374151',
           fontSize: size * 0.38,
         }}
       >

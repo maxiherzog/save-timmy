@@ -281,20 +281,20 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <div className="font-bold text-lg truncate text-white">{name}</div>
+            <div className="font-bold text-lg truncate text-slate-800">{name}</div>
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/20 text-[10px] text-white font-mono" title="Ping">
               <Wifi className={`w-2.5 h-2.5 ${ping === 0 ? 'opacity-50' : ping < 150 ? 'text-green-400' : ping < 400 ? 'text-yellow-400' : 'text-red-400'}`} />
               {ping > 0 ? `${Math.round(ping)}ms` : '--'}
             </div>
           </div>
-          <div className="text-xs opacity-90 truncate text-white/80">{c.name}</div>
+          <div className="text-xs opacity-90 truncate text-slate-700/80">{c.name}</div>
         </div>
         <button
           onClick={doPressConference}
           disabled={pkUsed}
           className={`px-3 py-2 rounded-lg font-bold text-xs border-2 flex items-center justify-center gap-1.5 transition-colors ${
             pkUsed
-              ? 'bg-slate-200/20 border-slate-300/20 text-white/40'
+              ? 'bg-slate-200/20 border-slate-300/20 text-slate-800/40'
               : 'bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/50 text-white'
           }`}
           title="Pressekonferenz"

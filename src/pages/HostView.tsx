@@ -6,7 +6,7 @@ import { VotingOverlay } from '../components/VotingOverlay';
 import { EndScreen } from '../components/EndScreen';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { WhaleLogo } from '../components/WhaleLogo';
-import { Users, Copy, Check, LogOut } from 'lucide-react';
+import { Users, Copy, Check, LogOut, Wifi, WifiOff } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import PressConferencePng from '../assets/PressConference.jpg';
 import { characterById } from '../game/characters';
@@ -195,13 +195,32 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2 max-w-4xl px-4 z-10 pointer-events-none">
         {players.map((p) => {
           const ch = characterById(p.characterId);
+          const ping = Math.round(p.ping);
+          const isLagging = ping > 150;
+          const isDisconnected = !p.connected;
           return (
-            <div key={p.id} className={`flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-full px-3 py-1.5 text-sm shadow-lg ${p.boat.alive ? '' : 'opacity-40 grayscale'}`}>
-              <div
-                className="w-4 h-4 rounded-full border border-white/20"
-                style={{ backgroundColor: ch.color }}
-              />
-              <span className="font-semibold text-white truncate max-w-[120px]">{p.name}</span>
+            <div
+              key={p.id}
+              className={`flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-full pl-2 pr-3 py-1.5 text-sm shadow-lg transition-opacity ${
+                p.boat.alive ? '' : 'opacity-40 grayscale'
+              } ${isDisconnected ? 'opacity-50' : ''}`}
+            >
+              <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: ch.color }} />
+              <span className="font-semibold text-white truncate max-w-[100px]">{p.name}</span>
+              <div className="flex items-center gap-1.5">
+                {isDisconnected ? (
+                  <WifiOff className="w-3.5 h-3.5 text-red-500" />
+                ) : (
+                  <Wifi className={`w-3.5 h-3.5 ${isLagging ? 'text-yellow-400' : 'text-green-500'}`} />
+                )}
+                <span
+                  className={`text-xs font-mono font-semibold ${
+                    isDisconnected ? 'text-red-500' : isLagging ? 'text-yellow-400' : 'text-slate-400'
+                  }`}
+                >
+                  {isDisconnected ? 'DC' : `${ping}ms`}
+                </span>
+              </div>
             </div>
           );
         })}

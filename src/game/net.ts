@@ -10,7 +10,7 @@ export const playerChannelName = (code: string, playerId: string) => `player-${c
 export type NetEvent =
   | { type: 'join'; playerId: string; name: string }
   | { type: 'leave'; playerId: string }
-  | { type: 'input'; playerId: string; input: PlayerInput }
+  | { type: 'input'; playerId: string; input: PlayerInput; ping: number }
   | { type: 'start'; token: string }
   | { type: 'press-conference'; playerId: string }
   | { type: 'vote'; playerId: string; targetId: string }

@@ -117,6 +117,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         ready: false,
         connected: true,
         lastSeen: now,
+        ping: 0,
       };
     } else if (e.type === 'leave') {
       if (s.players[e.playerId]) s.players[e.playerId].connected = false;
@@ -124,6 +125,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
       const p = s.players[e.playerId];
       if (p) {
         p.input = e.input;
+        p.ping = e.ping;
         p.lastSeen = now;
         p.connected = true;
       }
@@ -208,6 +210,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         boat: createBoat(Object.keys(fresh.players).length, 8),
         input: { joystickX: 0, joystickY: 0, hupen: false, trampeln: false },
         pressConferenceUsed: false,
+        ping: 0,
       };
     }
     stateRef.current = fresh;

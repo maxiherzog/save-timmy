@@ -14,10 +14,14 @@ export function usePlayer(code: string, playerId: string, name: string) {
   const [role, setRole] = useState<SecretRole | null>(null);
   const [assignments, setAssignments] = useState<Record<string, CharacterId>>({});
   const [ping, setPing] = useState<number>(0);
+  const pingRef = useRef(ping);
+  useEffect(() => {
+    pingRef.current = ping;
+  }, [ping]);
+
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
-  const lastSentRef = useRef<string>('');
 
   useEffect(() => {
     if (!code || !playerId || !name) return;
@@ -52,13 +56,9 @@ export function usePlayer(code: string, playerId: string, name: string) {
     // Heartbeat input
     const heartbeat = setInterval(() => {
       if (chRef.current) {
-        const sig = JSON.stringify(inputRef.current);
-        if (sig !== lastSentRef.current) {
-          lastSentRef.current = sig;
-          sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current } }).catch(() => {});
-        }
+        sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current }, ping: pingRef.current }).catch(() => {});
       }
-    }, 66);
+    }, 100);
 
     // Ping loop
     const pingLoop = setInterval(() => {

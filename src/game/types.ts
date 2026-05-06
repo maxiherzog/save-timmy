@@ -90,6 +90,7 @@ export type Player = {
   ready: boolean;
   connected: boolean;
   lastSeen: number;
+  ping: number;
 };
 
 export type VoteState = {

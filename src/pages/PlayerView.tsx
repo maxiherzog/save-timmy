@@ -17,6 +17,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
   const [hupenFlash, setHupenFlash] = useState(false);
   const [trampelnFlash, setTrampelnFlash] = useState(false);
   const [voted, setVoted] = useState<string | null>(null);
+  const [isRevealingRole, setIsRevealingRole] = useState(false);
 
   useEffect(() => {
     if (state?.phase !== 'voting') setVoted(null);
@@ -146,29 +147,42 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
 
         {role && (
           <div
-            className={`rounded-xl p-6 border-2 text-center max-w-sm my-6 ${
-              isImposter
-                ? 'bg-red-50 border-red-500'
-                : 'bg-green-50 border-green-500'
+            className={`relative rounded-xl p-6 border-2 text-center max-w-sm my-6 select-none transition-all ${
+              isRevealingRole ? (isImposter ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500') : 'bg-slate-800 border-slate-700'
             }`}
+            onTouchStart={() => setIsRevealingRole(true)}
+            onTouchEnd={() => setIsRevealingRole(false)}
+            onMouseDown={() => setIsRevealingRole(true)}
+            onMouseUp={() => setIsRevealingRole(false)}
+            onMouseLeave={() => setIsRevealingRole(false)}
           >
-            {isImposter ? (
-              <>
-                <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-red-800 mb-2">DU BIST DER SABOTEUR</div>
-                <div className="text-sm text-red-700">
-                  Sorge dafür, dass Timmy stirbt &mdash; aber lass dich nicht erwischen.
-                </div>
-              </>
-            ) : (
-              <>
-                <Heart className="w-10 h-10 text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-green-800 mb-2">DU BIST EIN RETTER</div>
-                <div className="text-sm text-green-700">
-                  Lotst Timmy sicher in die Barge!
-                </div>
-              </>
-            )}
+            <div className={`transition-opacity duration-300 ${isRevealingRole ? 'opacity-100' : 'opacity-0'}`}>
+              {isImposter ? (
+                <>
+                  <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-red-800 mb-2">DU BIST DER SABOTEUR</div>
+                  <div className="text-sm text-red-700">
+                    Sorge dafür, dass Timmy stirbt &mdash; aber lass dich nicht erwischen.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Heart className="w-10 h-10 text-green-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-green-800 mb-2">DU BIST EIN RETTER</div>
+                  <div className="text-sm text-green-700">
+                    Lotst Timmy sicher in die Barge!
+                  </div>
+                </>
+              )}
+            </div>
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-white transition-opacity duration-300 ${
+                isRevealingRole ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              <div className="text-lg font-bold">Rolle aufdecken</div>
+              <div className="text-sm text-slate-400">Finger gedrückt halten</div>
+            </div>
           </div>
         )}
 

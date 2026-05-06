@@ -183,9 +183,17 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
 
     for (const p of Object.values(s.players)) p.ready = false;
     s.phase = 'starting';
+    // Immediately inform players about the new phase
+    if (chRef.current) sendState(chRef.current, s).catch(() => {});
+    setState({ ...s });
+
     setTimeout(() => {
       if (!stateRef.current) return;
-      if (stateRef.current.phase === 'starting') stateRef.current.phase = 'ready';
+      if (stateRef.current.phase === 'starting') {
+        stateRef.current.phase = 'ready';
+        if (chRef.current) sendState(chRef.current, stateRef.current).catch(() => {});
+        setState({ ...stateRef.current });
+      }
     }, 3500);
   }
 
@@ -218,6 +226,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     }
     stateRef.current = fresh;
     setState({ ...fresh });
+    if (chRef.current) sendState(chRef.current, fresh).catch(() => {});
     supabase.from('rooms').update({ state: 'lobby', ended_at: null }).eq('code', code);
   }
 

@@ -1,0 +1,21 @@
+{
+  "name": "Ab in die Barge!",
+  "short_name": "Barge",
+  "description": "Ein lokales Multiplayer-Partyspiel, bei dem Spieler gemeinsam einen gestrandeten Wal (Timmy) in Sicherheit navigieren müssen – doch einer unter ihnen ist der Saboteur!",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#052e3a",
+  "theme_color": "#61ACD2",
+  "icons": [
+    {
+      "src": "./android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

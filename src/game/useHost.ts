@@ -105,6 +105,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     mutate((s) => {
       const now = performance.now() / 1000;
       if (e.type === 'join') {
+        console.log(`[Host] received join event from ${e.playerId} (${e.name})`);
         if (s.phase !== 'lobby') return;
         if (s.players[e.playerId]) {
           s.players[e.playerId].connected = true;

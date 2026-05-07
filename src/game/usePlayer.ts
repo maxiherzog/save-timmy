@@ -33,6 +33,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
     if (!code || !playerId || !name) return;
 
     function connect(attempt = 0) {
+      console.log(`[Player ${playerId}] connect() called, attempt #${attempt}`);
       if (reconTimer.current) clearTimeout(reconTimer.current);
       if (chRef.current) supabase.removeChannel(chRef.current);
       if (privateRef.current) supabase.removeChannel(privateRef.current);
@@ -68,6 +69,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
       });
       
       ch.subscribe((status) => {
+        console.log(`[Player ${playerId}] subscription status: ${status}`);
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
           sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
@@ -75,6 +77,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
         } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           setConnectionStatus('disconnected');
           const delay = Math.min(30000, 1000 * Math.pow(2, attempt)); // Exponential backoff
+          console.log(`[Player ${playerId}] disconnected, retrying in ${delay}ms...`);
           reconTimer.current = window.setTimeout(() => connect(attempt + 1), delay);
         }
       });

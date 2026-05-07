@@ -27,11 +27,13 @@ export function usePlayer(code: string, playerId: string, name: string) {
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
+  const reconTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!code || !playerId || !name) return;
 
-    function connect() {
+    function connect(attempt = 0) {
+      if (reconTimer.current) clearTimeout(reconTimer.current);
       if (chRef.current) supabase.removeChannel(chRef.current);
       if (privateRef.current) supabase.removeChannel(privateRef.current);
 
@@ -45,12 +47,8 @@ export function usePlayer(code: string, playerId: string, name: string) {
         },
         onState: (msg) => {
           const newState = msg.state as GameState;
-          if (lastStateVersion.current !== 0 && newState.version < lastStateVersion.current) {
-            // Stale state, ignore
-            return;
-          }
+          if (lastStateVersion.current !== 0 && newState.version < lastStateVersion.current) return;
           if (lastStateVersion.current !== 0 && newState.version > lastStateVersion.current + 1) {
-            // We missed a state, request a full one
             sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
           }
           setState(newState);
@@ -63,6 +61,12 @@ export function usePlayer(code: string, playerId: string, name: string) {
         },
       });
 
+      ch.on('system', {}, (payload) => {
+        if (payload.status === 'error') {
+          setConnectionStatus('disconnected');
+        }
+      });
+      
       ch.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
@@ -70,6 +74,8 @@ export function usePlayer(code: string, playerId: string, name: string) {
           sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
         } else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           setConnectionStatus('disconnected');
+          const delay = Math.min(30000, 1000 * Math.pow(2, attempt)); // Exponential backoff
+          reconTimer.current = window.setTimeout(() => connect(attempt + 1), delay);
         }
       });
       
@@ -95,16 +101,10 @@ export function usePlayer(code: string, playerId: string, name: string) {
       }
     }, 1000);
 
-    const reconLoop = setInterval(() => {
-      if (chRef.current?.state === 'closed' || chRef.current?.state === 'errored') {
-        connect();
-      }
-    }, 3000);
-
     return () => {
+      if (reconTimer.current) clearTimeout(reconTimer.current);
       clearInterval(heartbeat);
       clearInterval(pingLoop);
-      clearInterval(reconLoop);
       if (chRef.current) {
         sendEvent(chRef.current, { type: 'leave', playerId }).catch(() => {});
         supabase.removeChannel(chRef.current);

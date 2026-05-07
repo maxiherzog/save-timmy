@@ -11,7 +11,7 @@ This is a local multiplayer party game built with React, TypeScript, Vite, and T
 - **`npm run dev`**: Starts the Vite dev server. The `base` path is correctly set to `/` for this command.
 - **`npm run dev:host`**: Exposes the dev server to the local network for testing with mobile controllers.
 - **`npm run lint`**: Lints the codebase.
-- **`npm run typecheck`**: Runs the TypeScript compiler for type-checking.
+- **`npm run typecheck`**: Runs the TypeScript compiler for type-checking (`tsc --noEmit -p tsconfig.app.json`).
 - **`npm run build`**: Builds the app for production. The `base` path is correctly set to `/save-timmy/` for this command.
 
 **Note:** There is no dedicated test script.

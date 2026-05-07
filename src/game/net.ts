@@ -13,6 +13,7 @@ export type NetEvent =
   | { type: 'input'; playerId: string; input: PlayerInput; ping: number }
   | { type: 'start'; token: string }
   | { type: 'press-conference'; playerId: string }
+  | { type: 'press-conference-started' }
   | { type: 'vote'; playerId: string; targetId: string }
   | { type: 'request-state'; playerId: string }
   | { type: 'rematch'; token: string }
@@ -83,6 +84,17 @@ export async function sendState(ch: RealtimeChannel, state: GameState) {
   delete clean.fx;
   delete clean.bargeDrift;
   delete clean['_imposterIds'];
+
+  // Further player-specific cleanup
+  const cleanPlayers: any = {};
+  for (const [id, p] of Object.entries(clean.players as any)) {
+    const cleanP = { ...p };
+    delete cleanP.input;
+    delete cleanP.boat.stats;
+    delete cleanP.lastSeen;
+    cleanPlayers[id] = cleanP;
+  }
+  clean.players = cleanPlayers;
 
   await ch.send({ type: 'broadcast', event: 'state', payload: { type: 'state', state: clean } });
 }

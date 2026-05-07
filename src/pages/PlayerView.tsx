@@ -102,7 +102,8 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
               <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
                 {p.name.slice(0, 1).toUpperCase()}
               </div>
-              <div className="font-semibold">{p.name}</div>
+               <div className="font-semibold">{p.name}</div>
+               {p.status === 'disconnected' && <span className="ml-auto text-xs font-semibold text-slate-500">Verbindung verloren</span>}
               {p.id === playerId && <span className="ml-auto text-xs font-semibold text-blue-600">Das bist du</span>}
             </div>
           ))}

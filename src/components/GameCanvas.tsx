@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '../game/types';
 import { MAP_W, MAP_H, HEAL_ZONES, DOCK_ZONE } from '../game/map';
-import { Heart } from 'lucide-react';
+import { Heart, Anchor } from 'lucide-react';
 import { characterById } from '../game/characters';
 import { WHALE_MAX_HP, HEAL_RATE_PER_SEC } from '../game/types';
 import starsSvg from '../assets/stars.svg?url';
@@ -655,6 +655,7 @@ function drawFxAbove(ctx: CanvasRenderingContext2D, state: GameState) {
 
 function HUD({ state }: { state: GameState }) {
   const hpPct = (state.whale.hp / WHALE_MAX_HP) * 100;
+  const bargePct = state.whale.bargeProgress * 100;
   return (
     <>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-10">
@@ -671,6 +672,21 @@ function HUD({ state }: { state: GameState }) {
             {Math.round(state.whale.hp)} / {WHALE_MAX_HP}
           </div>
         </div>
+        {bargePct > 1 && (
+          <div className="w-[320px] h-6 bg-black/50 rounded-full overflow-hidden border-2 border-white/30 relative">
+            <div
+              className="h-full transition-all duration-150"
+              style={{
+                width: `${bargePct}%`,
+                background: 'linear-gradient(90deg,#3b82f6,#60a5fa)',
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-xs font-bold text-white font-['Comic_Neue']">
+              <Anchor className="w-3.5 h-3.5" />
+              TIMMY IN SICHERHEIT BRINGEN
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -41,7 +41,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
     return <div className="min-h-screen flex items-center justify-center">Lade...</div>;
   }
 
-  const players = Object.values(state.players).filter((p) => p.connected);
+  const players = Object.values(state.players);
 
   if (state.phase === 'lobby') {
     return (
@@ -102,8 +102,8 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
                   <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
                     {p.name.slice(0, 1).toUpperCase()}
                   </div>
-                  <div className="font-semibold text-lg flex-1">{p.name}</div>
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" title="Verbunden" />
+                   <div className="font-semibold text-lg flex-1">{p.name}</div>
+                   <div className={`w-3 h-3 rounded-full ${p.status === 'connected' ? 'bg-emerald-400' : 'bg-slate-400'}`} title={p.status === 'connected' ? 'Verbunden' : 'Verbindung verloren'} />
                 </div>
               ))}
             </div>
@@ -197,7 +197,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
           const ch = characterById(p.characterId);
           const ping = Math.round(p.ping);
           const isLagging = ping > 150;
-          const isDisconnected = !p.connected;
+          const isDisconnected = p.status === 'disconnected';
           return (
             <div
               key={p.id}

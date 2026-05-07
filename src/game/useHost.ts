@@ -12,7 +12,7 @@ import {
   type NetEvent,
 } from './net';
 
-const BROADCAST_HZ = 15;
+const BROADCAST_HZ = 12;
 
 export function useHost(code: string, hostToken: string, imposterCount: number = 1, testMode: boolean = false) {
   const [state, setState] = useState<GameState | null>(null);
@@ -71,7 +71,9 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         for (const p of Object.values(s.players)) {
           if (!p.connected && nowSec - p.lastSeen > 30) {
             delete s.players[p.id];
+            continue;
           }
+          p.status = nowSec - p.lastSeen > 1 ? 'disconnected' : 'connected';
         }
         stepSimulation(s, dt, nowSec);
         if (now - lastBroadcast > 1000 / BROADCAST_HZ) {
@@ -118,6 +120,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         connected: true,
         lastSeen: now,
         ping: 0,
+        status: 'connected',
       };
     } else if (e.type === 'leave') {
       if (s.players[e.playerId]) s.players[e.playerId].connected = false;
@@ -134,7 +137,10 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     } else if (e.type === 'press-conference') {
       startVote(s, e.playerId, now);
       // Force a broadcast immediately after starting a vote
-      if (chRef.current) sendState(chRef.current, s).catch(() => {});
+      if (chRef.current) {
+        sendState(chRef.current, s).catch(() => {});
+        sendEvent(chRef.current, { type: 'press-conference-started' }).catch(() => {});
+      }
       setState({ ...s });
     } else if (e.type === 'vote') {
       castVote(s, e.playerId, e.targetId);
@@ -213,7 +219,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
   function resetToLobby() {
     const old = stateRef.current;
     if (!old) return;
-    const fresh = createInitialState(code, old.impostersCount);
+    const fresh = createInitialState(code, old.impostersCount, Date.now());
     // keep players
     for (const [id, p] of Object.entries(old.players)) {
       fresh.players[id] = {
@@ -222,6 +228,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         input: { joystickX: 0, joystickY: 0, hupen: false, trampeln: false },
         pressConferenceUsed: false,
         ping: 0,
+        status: 'connected',
       };
     }
     stateRef.current = fresh;

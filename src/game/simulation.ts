@@ -2,7 +2,7 @@ import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
 import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, DOCK_ZONE } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
-import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION, HEAL_RATE_PER_SEC } from './types';
+import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION, HEAL_RATE_PER_SEC, BARGE_WIN_TIME } from './types';
 
 export function createInitialWhale(): Whale {
   return {
@@ -20,6 +20,7 @@ export function createInitialWhale(): Whale {
     panicTimer: 0,
     ignoreBanksUntil: 7, // 7 seconds grace period
     accumulatedDamage: 0,
+    bargeProgress: 0,
   };
 }
 
@@ -43,8 +44,8 @@ export function createBoat(index: number, _total: number): Boat {
   };
 }
 
-export function createInitialState(code: string, impostersCount: number = 1): GameState {
-  const seed = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+export function createInitialState(code: string, impostersCount: number = 1, remapSeed?: number): GameState {
+  const seed = remapSeed ?? code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const sandbanks = createMap(seed);
   return {
     code,
@@ -162,6 +163,10 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
 
   boat.x += boat.vx * dt * speedMul;
   boat.y += boat.vy * dt * speedMul;
+
+  // Invisible side walls
+  resolveCircleAABB(boat, BOAT_RADIUS, -50, 0, 50, MAP_H);
+  resolveCircleAABB(boat, BOAT_RADIUS, MAP_W, 0, 50, MAP_H);
 
   if (boat.x < 30) { boat.x = 30; boat.vx = 0; }
   if (boat.x > MAP_W - 30) { boat.x = MAP_W - 30; boat.vx = 0; }
@@ -355,6 +360,7 @@ function updateWhale(state: GameState, dt: number) {
   } else {
     w.bargeTimer = Math.max(0, w.bargeTimer - dt * 0.5);
   }
+  w.bargeProgress = w.bargeTimer / BARGE_WIN_TIME;
 
   for (const p of Object.values(state.players)) {
     if (!p.boat.alive) continue;
@@ -510,7 +516,7 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
       if (state.whale.hp <= 0 && state.whale.state !== 'dead') {
         state.whale.state = 'dead';
         endMatch(state, 'imposter', 'whale_died');
-      } else if (state.whale.bargeTimer >= 3 && state.whale.hp > 0 && state.whale.state !== 'dead') {
+      } else if (state.whale.bargeTimer >= BARGE_WIN_TIME && state.whale.hp > 0 && state.whale.state !== 'dead') {
         endMatch(state, 'rescuers', 'barge');
       }
   }

@@ -31,6 +31,9 @@ export function usePlayer(code: string, playerId: string, name: string) {
         if (e.type === 'pong' && e.playerId === playerId) {
           setPing(performance.now() - e.t);
         }
+        if (e.type === 'press-conference-started') {
+          if (chRef.current) sendEvent(chRef.current, { type: 'request-state', playerId }).catch(() => {});
+        }
       },
       onState: (msg) => setState(msg.state as GameState),
       onAssignments: (list) => {

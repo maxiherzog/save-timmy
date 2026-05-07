@@ -43,6 +43,7 @@ export type Whale = {
   panicTimer: number;
   ignoreBanksUntil: number;
   accumulatedDamage: number;
+  bargeProgress: number;
 };
 
 export type Decoration = {
@@ -91,6 +92,7 @@ export type Player = {
   connected: boolean;
   lastSeen: number;
   ping: number;
+  status: 'connected' | 'disconnected';
 };
 
 export type VoteState = {
@@ -145,3 +147,4 @@ export const WHALE_MAX_HP = 65;
 export const HEAL_RATE_PER_SEC = 4.5;
 export const BARGE_DRIFT_INTERVAL = 45;
 export const BARGE_DRIFT_DURATION = 6;
+export const BARGE_WIN_TIME = 3;

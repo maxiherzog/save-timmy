@@ -85,6 +85,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
       chRef.current = ch;
 
       const priv = subscribePrivate(code, playerId, (r) => setRole(r));
+      priv.subscribe();
       privateRef.current = priv;
     }
     

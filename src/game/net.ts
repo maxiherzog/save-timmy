@@ -53,7 +53,6 @@ export function subscribeRoom(
       handlers.onAssignments!(msg.payload as { playerId: string; characterId: CharacterId }[])
     );
   }
-  ch.subscribe();
   return ch;
 }
 
@@ -66,7 +65,6 @@ export function subscribePrivate(
     config: { broadcast: { self: false } },
   });
   ch.on('broadcast', { event: 'role' }, (msg) => onRole(msg.payload as SecretRole));
-  ch.subscribe();
   return ch;
 }
 

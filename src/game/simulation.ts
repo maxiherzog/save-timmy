@@ -329,7 +329,7 @@ function updateWhale(state: GameState, dt: number) {
         state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 80, y: w.y + (Math.random() - 0.5) * 80, t: performance.now() / 1000 });
       }
     } else {
-      if (baseSpeed > 5 && Math.random() < 0.002*baseSpeed) {
+      if (baseSpeed > 5 && Math.random() < 0.0005*baseSpeed) {
         // Spawn at the center
         state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x, y: w.y, t: performance.now() / 1000, heading: w.heading });
       }

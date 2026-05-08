@@ -52,15 +52,15 @@ function organicBlob(
   jitter: number,
   rng: () => number,
 ): Array<[number, number]> {
-  const poly: Array<[number, number]> = [];
+  const controlPoints: Array<[number, number]> = [];
   for (let i = 0; i < points; i++) {
     const t = (i / points) * Math.PI * 2;
     const noise = 1 + (rng() - 0.5) * jitter;
     const px = cx + Math.cos(t) * rx * noise;
     const py = cy + Math.sin(t) * ry * noise;
-    poly.push([px, py]);
+    controlPoints.push([px, py]);
   }
-  return poly;
+  return polyFromCurve(controlPoints, 8);
 }
 
 function coastlinePoly(
@@ -121,6 +121,32 @@ function coastlinePoly(
 }
 
 
+function catmullRom(p0: [number, number], p1: [number, number], p2: [number, number], p3: [number, number], t: number): [number, number] {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const x = 0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3);
+  const y = 0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3);
+  return [x, y];
+}
+
+function polyFromCurve(points: [number, number][], segmentsPerCurve: number): [number, number][] {
+  const poly: [number, number][] = [];
+  const numPoints = points.length;
+  if (numPoints < 2) return [];
+
+  for (let i = 0; i < numPoints; i++) {
+    const p0 = points[(i - 1 + numPoints) % numPoints];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % numPoints];
+    const p3 = points[(i + 2) % numPoints];
+
+    for (let j = 0; j < segmentsPerCurve; j++) {
+      poly.push(catmullRom(p0, p1, p2, p3, j / segmentsPerCurve));
+    }
+  }
+  return poly;
+}
+
 function bbox(poly: Array<[number, number]>) {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const [x, y] of poly) {
@@ -133,7 +159,7 @@ function bbox(poly: Array<[number, number]>) {
 }
 
 function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, rng: () => number, jitter = 0.35): Sandbank {
-  const poly = organicBlob(cx, cy, rx, ry, 32, jitter, rng);
+  const poly = organicBlob(cx, cy, rx, ry, 8, jitter, rng);
   const bb = bbox(poly);
   return {
     x: cx,
@@ -352,12 +378,6 @@ export function createMap(seed: number): Sandbank[] {
         continue;
       }
 
-      // Keep away from Harbor zones
-      const nearHarbor = Math.sqrt(Math.pow(x - (DOCK_ZONE.x + DOCK_ZONE.w / 2), 2) + Math.pow(y - (DOCK_ZONE.y + DOCK_ZONE.h / 2), 2)) < (rx + ry) * 1.5;
-      if (nearHarbor) {
-        attempts++;
-        continue;
-      }
 
       overlaps = false;
       for (const area of takenAreas) {
@@ -387,8 +407,6 @@ export const HEAL_ZONES: HealZone[] = [
   { x: 820, y: 720, w: 220, h: 40 },
 ];
 
-// Dock at the bottom left, wider along the shore
-export const DOCK_ZONE = { x: 40, y: MAP_H - 250, w: 400, h: 200 };
 
 export const BARGE: Barge = {
   x: MAP_W - 280,

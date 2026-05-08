@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '../game/types';
-import { MAP_W, MAP_H, HEAL_ZONES, DOCK_ZONE } from '../game/map';
+import { MAP_W, MAP_H, HEAL_ZONES } from '../game/map';
 import { Heart, Anchor } from 'lucide-react';
 import { characterById } from '../game/characters';
 import { WHALE_MAX_HP, HEAL_RATE_PER_SEC } from '../game/types';
@@ -96,23 +96,9 @@ export function GameCanvas({ state }: Props) {
         ctx.fillText(`Bagger-Rinne (+${HEAL_RATE_PER_SEC} HP/s)`, z.x + z.w / 2, z.y + z.h / 2 + 5);
       }
 
-      // Dock Zone
-      ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fillRect(DOCK_ZONE.x, DOCK_ZONE.y, DOCK_ZONE.w, DOCK_ZONE.h);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(DOCK_ZONE.x, DOCK_ZONE.y, DOCK_ZONE.w, DOCK_ZONE.h);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '700 20px "Comic Neue", system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('DOCK', DOCK_ZONE.x + DOCK_ZONE.w / 2, DOCK_ZONE.y + DOCK_ZONE.h / 2 + 8);
-      ctx.restore();
 
         // Sandbanks
         for (const sb of s.sandbanks) {
-          if (!sb.visible || sb.poly.length < 3) continue;
-          
           // Ripple stroke
           ctx.save();
           ctx.beginPath();
@@ -182,7 +168,6 @@ export function GameCanvas({ state }: Props) {
 
       // Draw decorations in a separate pass after all sandbanks are drawn
       for (const sb of s.sandbanks) {
-        if (!sb.visible || sb.poly.length < 3) continue;
         for (const dec of sb.decorations) {
           const img = decorationImages[dec.asset];
           if (!img || !img.complete) continue;

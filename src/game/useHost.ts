@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { CHARACTERS, type CharacterId } from './characters';
-import { createBoat, createInitialState, stepSimulation, startVote, castVote } from './simulation';
+import { createBoat, createInitialState, stepSimulation, startVote, castVote, createSpawnPoints } from './simulation';
 import type { GameState } from './types';
 import {
   sendAssignments,
@@ -113,7 +113,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         id: e.playerId,
         name: e.name,
         characterId: 'hilse',
-        boat: createBoat(idx, 8),
+        boat: createBoat({ x: 0, y: 0 }),
         input: { joystickX: 0, joystickY: 0, hupen: false, trampeln: false },
         pressConferenceUsed: false,
         ready: false,
@@ -169,10 +169,11 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     const imposters = shuffledPlayers.slice(0, imposterCount);
     const shuffledCharacters = [...CHARACTERS].sort(() => Math.random() - 0.5);
     const assignments: { playerId: string; characterId: CharacterId }[] = [];
+    const spawnPoints = createSpawnPoints(players.length);
 
     players.forEach((p, i) => {
       p.characterId = shuffledCharacters[i % shuffledCharacters.length].id;
-      p.boat = createBoat(i, players.length);
+      p.boat = createBoat(spawnPoints[i]);
       p.pressConferenceUsed = false;
       assignments.push({ playerId: p.id, characterId: p.characterId });
     });
@@ -224,7 +225,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     for (const [id, p] of Object.entries(old.players)) {
       fresh.players[id] = {
         ...p,
-        boat: createBoat(Object.keys(fresh.players).length, 8),
+        boat: createBoat({ x: 0, y: 0 }),
         input: { joystickX: 0, joystickY: 0, hupen: false, trampeln: false },
         pressConferenceUsed: false,
         ping: 0,

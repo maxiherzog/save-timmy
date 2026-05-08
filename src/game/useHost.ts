@@ -169,7 +169,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     const imposters = shuffledPlayers.slice(0, imposterCount);
     const shuffledCharacters = [...CHARACTERS].sort(() => Math.random() - 0.5);
     const assignments: { playerId: string; characterId: CharacterId }[] = [];
-    const spawnPoints = createSpawnPoints(players.length);
+    const spawnPoints = createSpawnPoints(players.length, s.sandbanks);
 
     players.forEach((p, i) => {
       p.characterId = shuffledCharacters[i % shuffledCharacters.length].id;

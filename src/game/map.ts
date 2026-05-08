@@ -360,8 +360,8 @@ export function createMap(seed: number): Sandbank[] {
     let overlaps = true;
 
     while (overlaps && attempts < 30) {
-      rx = 80 + rng() * 60; // Random width
-      ry = 40 + rng() * 40;  // Random height
+      rx = 60 + rng() * 120; // Random width, allows for more elongated shapes
+      ry = 30 + rng() * 60;  // Random height
       // Keep away from the outer walls and the barge area
       x = wallThickness + rx + 100 + rng() * (MAP_W - 2 * (wallThickness + rx + 100));
       y = wallThickness + ry + 100 + rng() * (MAP_H - 2 * (wallThickness + ry + 100));
@@ -392,7 +392,7 @@ export function createMap(seed: number): Sandbank[] {
 
     if (!overlaps) {
       const name = availableNames.pop() || '';
-      sandbanks.push(makeBank(x, y, rx, ry, name, rng, 0.2 + rng()*0.1)); // Reduced jitter for smoother shapes
+      sandbanks.push(makeBank(x, y, rx, ry, name, rng, 0.4 + rng() * 0.4)); // Increased jitter
       takenAreas.push({x, y, rx, ry});
     }
   }

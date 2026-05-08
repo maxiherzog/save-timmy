@@ -1,6 +1,6 @@
 import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
-import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone } from './map';
+import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, Sandbank } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION, HEAL_RATE_PER_SEC, BARGE_WIN_TIME } from './types';
 
@@ -24,12 +24,14 @@ export function createInitialWhale(): Whale {
   };
 }
 
-export function createSpawnPoints(playerCount: number): { x: number; y: number }[] {
+export function createSpawnPoints(playerCount: number, sandbanks: Sandbank[]): { x: number; y: number }[] {
   const points: { x: number; y: number }[] = [];
-  const shorelineY = MAP_H - 80;
   const minX = 100;
   const maxX = MAP_W - 400; // Avoid spawning too close to the barge
   const spacing = 150;
+  const spawnOffset = -40; // Spawn 40px "above" the shoreline (in the water)
+
+  const bottomCoast = sandbanks.find(s => s.y > MAP_H / 2 && s.name === '');
 
   const availableSlots = Math.floor((maxX - minX) / spacing);
   const startX = minX + ((maxX - minX) % spacing) / 2;
@@ -44,9 +46,19 @@ export function createSpawnPoints(playerCount: number): { x: number; y: number }
 
   for (let i = 0; i < playerCount; i++) {
     const slot = slots[i % availableSlots];
+    const x = startX + slot * spacing;
+    
+    let shorelineY = MAP_H - 80; // Fallback
+    if (bottomCoast) {
+      shorelineY = MAP_H;
+      while(anySandbank([bottomCoast], x, shorelineY)) {
+        shorelineY -= 5;
+      }
+    }
+
     points.push({
-      x: startX + slot * spacing,
-      y: shorelineY + (Math.random() - 0.5) * 40, // Add some minor Y variance
+      x: x + (Math.random() - 0.5) * 20,
+      y: shorelineY + spawnOffset,
     });
   }
 

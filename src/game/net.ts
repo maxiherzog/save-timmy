@@ -88,7 +88,7 @@ export async function sendState(ch: RealtimeChannel, state: GameState) {
   // Further player-specific cleanup
   const cleanPlayers: any = {};
   for (const [id, p] of Object.entries(clean.players as any)) {
-    const cleanP = { ...p };
+    const cleanP: any = { ...p };
     delete cleanP.input;
     delete cleanP.boat.stats;
     delete cleanP.lastSeen;

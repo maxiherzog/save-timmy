@@ -183,9 +183,11 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
         state.fx.push({ id: fxIdCounter++, kind: 'sand', x: boat.x + (Math.random() - 0.5) * 20, y: boat.y + (Math.random() - 0.5) * 20, t: now });
       }
     } else {
-      if (currentSpeed > 30 && Math.random() < 0.001*currentSpeed) {
+      if (currentSpeed > 30 && Math.random() < 0.0005*currentSpeed) {
+        // calculate velocity angle for better wake direction
+        const velocityAngle = Math.atan2(boat.vy, boat.vx);
         // Spawn at the center (thickest point)
-        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: boat.heading });
+        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: velocityAngle });
       }
     }
 
@@ -329,11 +331,11 @@ function updateWhale(state: GameState, dt: number) {
     
     // Wakes & Sand
     if (shallow) {
-      if (Math.random() < 0.15) {
-        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 80, y: w.y + (Math.random() - 0.5) * 80, t: performance.now() / 1000 });
+      if (Math.random() < 0.3) {
+        state.fx.push({ id: fxIdCounter++, kind: 'sand', x: w.x + (Math.random() - 0.5) * 200, y: w.y + (Math.random() - 0.5) * 200, t: performance.now() / 1000 });
       }
     } else {
-      if (baseSpeed > 5 && Math.random() < 0.005*baseSpeed) {
+      if (baseSpeed > 5 && Math.random() < 0.0005*baseSpeed) {
         // Spawn at the center
         state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x, y: w.y, t: performance.now() / 1000, heading: w.heading });
       }

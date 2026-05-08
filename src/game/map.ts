@@ -142,8 +142,7 @@ function makeBank(cx: number, cy: number, rx: number, ry: number, name: string, 
     ry: (bb.maxY - bb.minY) / 2,
     name,
     poly,
-    decorations: [],
-    visible: true,
+    decorations: []
   };
 }
 
@@ -154,7 +153,6 @@ function makeCoastBank(
   dMin: number,
   dMax: number,
   rng: () => number,
-  visible = true,
   depthProfile?: (t: number) => number,
 ): Sandbank {
   const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng, depthProfile);
@@ -166,8 +164,7 @@ function makeCoastBank(
     ry: (bb.maxY - bb.minY) / 2,
     name: '',
     poly,
-    decorations: [],
-    visible,
+    decorations: []
   };
 }
 
@@ -305,14 +302,14 @@ export function createMap(seed: number): Sandbank[] {
   const rng = mulberry32(seed);
   const sandbanks: Sandbank[] = [];
 
-  // 1. Continuous coastline around the entire map (creating an invisible wall of sand)
+  // 1. Continuous coastline above and below the map
   const wallThickness = 40; 
   const wallVariance = 15; 
   
   sandbanks.push(makeCoastBank('top', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng));
   
   // Bottom coast with a kink and flat right part
-  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng, true, (t) => {
+  sandbanks.push(makeCoastBank('bottom', 0, MAP_W, wallThickness - wallVariance, wallThickness + wallVariance, rng, (t) => {
     // t is from 0 to 1 across the bottom edge
     // Flat part on the right (e.g. last 20%)
     if (t > 0.8) return -wallVariance; // Push it towards the edge to make it flat
@@ -323,13 +320,6 @@ export function createMap(seed: number): Sandbank[] {
     return 0;
   }));
   
-  const leftWall = makeCoastBank('left', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false);
-  leftWall.visible = false;
-  sandbanks.push(leftWall);
-
-  const rightWall = makeCoastBank('right', 0, MAP_H, wallThickness - wallVariance, wallThickness + wallVariance, rng, false);
-  rightWall.visible = false;
-  sandbanks.push(rightWall);
 
   // 2. Generate random inner sandbanks
   const numBanks = 4 + Math.floor(rng() * 4); // 4 to 7 inner banks
@@ -347,8 +337,8 @@ export function createMap(seed: number): Sandbank[] {
       rx = 80 + rng() * 60; // Random width
       ry = 40 + rng() * 40;  // Random height
       // Keep away from the outer walls and the barge area
-      x = wallThickness + rx + 50 + rng() * (MAP_W - 2 * (wallThickness + rx + 50));
-      y = wallThickness + ry + 50 + rng() * (MAP_H - 2 * (wallThickness + ry + 50));
+      x = wallThickness + rx + 100 + rng() * (MAP_W - 2 * (wallThickness + rx + 100));
+      y = wallThickness + ry + 100 + rng() * (MAP_H - 2 * (wallThickness + ry + 100));
       
       // Keep away from Barge area (bottom right)
       if (x > MAP_W - 450 && y > MAP_H - 450) {

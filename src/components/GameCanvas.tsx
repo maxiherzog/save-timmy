@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '../game/types';
-import { MAP_W, MAP_H, HEAL_ZONES } from '../game/map';
+import { MAP_W, MAP_H } from '../game/map';
 import { Heart, Anchor } from 'lucide-react';
 import { characterById } from '../game/characters';
 import { WHALE_MAX_HP, HEAL_RATE_PER_SEC } from '../game/types';
@@ -83,7 +83,7 @@ export function GameCanvas({ state }: Props) {
         ctx.stroke();
       }
       
-      for (const z of HEAL_ZONES) {
+      for (const z of s.healZones) {
         ctx.fillStyle = 'rgba(34, 211, 238, 0.25)';
         ctx.fillRect(z.x, z.y, z.w, z.h);
         ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)';
@@ -106,9 +106,9 @@ export function GameCanvas({ state }: Props) {
           for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
           ctx.closePath();
           // Per-bank pulsing phase
-          const bankPhase = whalePhase * 1.5 + (sb.x * 0.1 + sb.y * 0.2);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + Math.sin(bankPhase) * 0.3})`;
-          ctx.lineWidth = 10 + Math.sin(bankPhase * 0.8) * 8;
+          const bankPhase = whalePhase * 2.5 + (sb.x * 0.01 + sb.y * 0.02);
+          ctx.strokeStyle = `rgba(100, 200, 255, ${0.6 + Math.sin(bankPhase) * 0.4})`;
+          ctx.lineWidth = 12 + Math.sin(bankPhase * 0.8) * 10;
           ctx.stroke();
           ctx.restore();
 
@@ -586,22 +586,22 @@ function drawFxAbove(ctx: CanvasRenderingContext2D, state: GameState) {
       ctx.restore();
     } else if (fx.kind === 'blow') {
       ctx.save();
-      const progress = age / 1.5; // Lasts 1.5 seconds
+      const progress = age / 1.8; // Lasts 1.8 seconds
       if (progress < 1) {
         ctx.globalAlpha = Math.max(0, 1 - progress);
-        ctx.fillStyle = '#bae6fd'; // Water color
+        ctx.fillStyle = '#e0f2fe'; // Water color (lighter)
         
         // Draw multiple droplets
-        for (let i = 0; i < 15; i++) {
-          const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.5; // Spray upwards
-          const speed = 40 + Math.random() * 80;
-          const gravity = 120;
+        for (let i = 0; i < 25; i++) {
+          const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.8; // Spray upwards
+          const speed = 50 + Math.random() * 120;
+          const gravity = 150;
           
           const dx = Math.cos(angle) * speed * age;
           const dy = Math.sin(angle) * speed * age + 0.5 * gravity * age * age; // Parabolic trajectory
           
           ctx.beginPath();
-          ctx.arc(fx.x + dx, fx.y + dy - 20, 2 + Math.random() * 3, 0, Math.PI * 2);
+          ctx.arc(fx.x + dx, fx.y + dy - 30, 3 + Math.random() * 4, 0, Math.PI * 2);
           ctx.fill();
         }
       }

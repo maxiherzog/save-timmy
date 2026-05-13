@@ -1,6 +1,6 @@
 import { playCrashSound, playWhaleSound } from './audio';
 import type { CharacterId } from './characters';
-import { createMap, HEAL_ZONES, BARGE, anySandbank, pointInHealZone, Sandbank } from './map';
+import { createMap, createHealZones, BARGE, anySandbank, pointInHealZone, Sandbank } from './map';
 import type { GameState, PlayerInput, Whale, Boat } from './types';
 import { MAP_W, MAP_H, WHALE_MAX_HP, TRAMPELN_STAMINA_MAX, TRAMPELN_COST, TRAMPELN_REGEN, BARGE_DRIFT_INTERVAL, BARGE_DRIFT_DURATION, HEAL_RATE_PER_SEC, BARGE_WIN_TIME } from './types';
 
@@ -85,7 +85,9 @@ export function createBoat(spawn: { x: number; y: number }): Boat {
 
 export function createInitialState(code: string, impostersCount: number = 1, remapSeed?: number): GameState {
   const seed = remapSeed ?? code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const rng = () => Math.random();
   const sandbanks = createMap(seed);
+  const healZones = createHealZones(rng, sandbanks);
   return {
     code,
     phase: 'lobby',
@@ -95,7 +97,7 @@ export function createInitialState(code: string, impostersCount: number = 1, rem
     players: {},
     whale: createInitialWhale(),
     sandbanks,
-    healZones: HEAL_ZONES,
+    healZones,
     barge: BARGE,
     vote: { active: false, calledBy: '', calledByCharacter: null, endsAt: 0, votes: {} },
     ended: null,
@@ -388,7 +390,7 @@ function updateWhale(state: GameState, dt: number) {
   if (w.y > MAP_H - 60) { w.y = MAP_H - 60; w.wanderHeading = -Math.PI / 2; }
 
 
-  if (pointInHealZone(w.x, w.y)) {
+  if (pointInHealZone(state.healZones, w.x, w.y)) {
     w.healCooldown -= dt;
     if (w.healCooldown <= 0) {
       w.hp = Math.min(WHALE_MAX_HP, w.hp + HEAL_RATE_PER_SEC * dt);
@@ -450,7 +452,7 @@ function updateWhale(state: GameState, dt: number) {
         }
       }
     }
-    if (pointInHealZone(w.x, w.y)) {
+    if (pointInHealZone(state.healZones, w.x, w.y)) {
       p.boat.stats.healTime += dt;
     }
   }

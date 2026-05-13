@@ -402,10 +402,51 @@ export function createMap(seed: number): Sandbank[] {
   return sandbanks;
 }
 
-export const HEAL_ZONES: HealZone[] = [
-  { x: 280, y: 440, w: 180, h: 40 },
-  { x: 820, y: 720, w: 220, h: 40 },
-];
+export function createHealZones(rng: () => number, sandbanks: Sandbank[]): HealZone[] {
+  const zones: HealZone[] = [];
+  const count = 2 + (rng() > 0.7 ? 1 : 0); // 2 or 3 zones
+
+  for (let i = 0; i < count; i++) {
+    let x = 0, y = 0, w = 0, h = 0;
+    let attempts = 0;
+    let overlaps = true;
+
+    while (overlaps && attempts < 20) {
+      w = 180 + rng() * 80;
+      h = 40;
+      x = 100 + rng() * (MAP_W - 200 - w);
+      y = 100 + rng() * (MAP_H - 200 - h);
+      
+      const zoneRect = { minX: x, minY: y, maxX: x + w, maxY: y + h };
+      overlaps = false;
+
+      // Check against barge
+      if (zoneRect.maxX > BARGE.x && zoneRect.minX < BARGE.x + BARGE.w && zoneRect.maxY > BARGE.y && zoneRect.minY < BARGE.y + BARGE.h) {
+        overlaps = true;
+      }
+      // Check against other heal zones
+      for (const z of zones) {
+        if (zoneRect.maxX > z.x && zoneRect.minX < z.x + z.w && zoneRect.maxY > z.y && zoneRect.minY < z.y + z.h) {
+          overlaps = true;
+          break;
+        }
+      }
+      // Check against sandbanks
+      for (const sb of sandbanks) {
+        if (zoneRect.maxX > sb.x - sb.rx && zoneRect.minX < sb.x + sb.rx && zoneRect.maxY > sb.y - sb.ry && zoneRect.minY < sb.y + sb.ry) {
+          overlaps = true;
+          break;
+        }
+      }
+      attempts++;
+    }
+
+    if (!overlaps) {
+      zones.push({ x, y, w, h });
+    }
+  }
+  return zones;
+}
 
 
 export const BARGE: Barge = {
@@ -441,8 +482,8 @@ export function anySandbank(sandbanks: Sandbank[], x: number, y: number): Sandba
   return null;
 }
 
-export function pointInHealZone(x: number, y: number): boolean {
-  for (const z of HEAL_ZONES) {
+export function pointInHealZone(healZones: HealZone[], x: number, y: number): boolean {
+  for (const z of healZones) {
     if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h) return true;
   }
   return false;

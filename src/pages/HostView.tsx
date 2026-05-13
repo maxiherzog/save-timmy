@@ -97,7 +97,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
               {players.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center gap-4 bg-slate-50 rounded-lg p-3"
+                  className={`flex items-center gap-4 bg-slate-50 rounded-lg p-3 transition-opacity ${p.status !== 'connected' ? 'opacity-50 grayscale' : ''}`}
                 >
                   <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
                     {p.name.slice(0, 1).toUpperCase()}
@@ -203,7 +203,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
               key={p.id}
               className={`flex items-center gap-2 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-full pl-2 pr-3 py-1.5 text-sm shadow-lg transition-opacity ${
                 p.boat.alive ? '' : 'opacity-40 grayscale'
-              } ${isDisconnected ? 'opacity-50' : ''}`}
+              } ${isDisconnected ? 'opacity-40 grayscale' : ''}`}
             >
               <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: ch.color }} />
               <span className="font-semibold text-white truncate max-w-[100px]">{p.name}</span>

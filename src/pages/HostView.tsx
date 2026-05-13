@@ -186,7 +186,7 @@ export function HostView({ onLeave, testMode }: HostViewProps) {
         <GameCanvas state={state} />
       </div>
       
-      {(state.phase as any) === 'countdown' && (
+      {state.phase === 'countdown' && (
         <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white z-20">
           <div className="text-4xl font-bold">Es geht gleich los...</div>
         </div>

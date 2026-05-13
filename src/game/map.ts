@@ -494,4 +494,4 @@ export function pointInBarge(x: number, y: number): boolean {
   return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
 }
 
-export { MAP_W, MAP_H };
+export { MAP_W, MAP_H, Sandbank };

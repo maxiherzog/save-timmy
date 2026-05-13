@@ -10,12 +10,12 @@ const starsImg = new Image();
 starsImg.src = starsSvg;
 
 const decorationImages: Record<string, HTMLImageElement> = {};
-const decorationFiles = import.meta.glob('../assets/decorations/*.png', { eager: true });
+const decorationFiles: Record<string, { default: string }> = import.meta.glob('../assets/decorations/*.png', { eager: true });
 
 for (const path in decorationFiles) {
   const name = path.split('/').pop()!;
   const img = new Image();
-  img.src = (decorationFiles[path] as any).default;
+  img.src = decorationFiles[path].default;
   decorationImages[name] = img;
 }
 
@@ -522,7 +522,7 @@ function drawWhale(ctx: CanvasRenderingContext2D, whale: GameState['whale'], pha
 
 function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
   const now = performance.now() / 1000;
-  for (const fx of state.fx as any[]) {
+  for (const fx of state.fx) {
     const age = now - fx.t;
     if (fx.kind === 'wake') {
       ctx.save();
@@ -547,7 +547,7 @@ function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
 
 function drawFxAbove(ctx: CanvasRenderingContext2D, state: GameState) {
   const now = performance.now() / 1000;
-  for (const fx of state.fx as any[]) {
+  for (const fx of state.fx) {
     const age = now - fx.t;
     if (fx.kind === 'hupen') {
       ctx.save();

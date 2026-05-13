@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { GameState, PlayerInput } from './types';
+import type { GameState, Player, PlayerInput } from './types';
 import type { CharacterId } from './characters';
 
 // Channel naming
@@ -76,25 +76,26 @@ export async function sendEvent(ch: RealtimeChannel, e: NetEvent) {
 }
 
 export async function sendState(ch: RealtimeChannel, state: GameState) {
-  const clean = { ...state } as any;
+  const clean: Partial<GameState> = { ...state };
   delete clean.sandbanks;
   delete clean.whale;
   delete clean.healZones;
   delete clean.barge;
   delete clean.fx;
   delete clean.bargeDrift;
-  delete clean['_imposterIds'];
+  delete (clean as GameState & { _imposterIds?: string[] })._imposterIds;
+
 
   // Further player-specific cleanup
-  const cleanPlayers: any = {};
-  for (const [id, p] of Object.entries(clean.players as any)) {
-    const cleanP: any = { ...p };
+  const cleanPlayers: Record<string, Partial<Player>> = {};
+  for (const [id, p] of Object.entries(clean.players as Record<string, Player>)) {
+    const cleanP: Partial<Player> = { ...p };
     delete cleanP.input;
-    delete cleanP.boat.stats;
+    delete (cleanP.boat as Partial<Player['boat']>)?.stats;
     delete cleanP.lastSeen;
     cleanPlayers[id] = cleanP;
   }
-  clean.players = cleanPlayers;
+  clean.players = cleanPlayers as Record<string, Player>;
 
   await ch.send({ type: 'broadcast', event: 'state', payload: { type: 'state', state: clean } });
 }

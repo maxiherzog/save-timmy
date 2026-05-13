@@ -8,6 +8,10 @@ import {
   subscribeRoom,
   type SecretRole,
 } from './net';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+
+// Add a type for the channel with state
+type ChannelWithState = RealtimeChannel & { state: string };
 
 export function usePlayer(code: string, playerId: string, name: string) {
   const [state, setState] = useState<GameState | null>(null);
@@ -19,7 +23,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
     pingRef.current = ping;
   }, [ping]);
 
-  const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
+  const chRef = useRef<ChannelWithState | null>(null);
   const privateRef = useRef<ReturnType<typeof subscribePrivate> | null>(null);
   const inputRef = useRef<PlayerInput>({ joystickX: 0, joystickY: 0, hupen: false, trampeln: false });
 
@@ -41,7 +45,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
         for (const a of list) map[a.playerId] = a.characterId;
         setAssignments(map);
       },
-    });
+    }) as ChannelWithState;
     chRef.current = ch;
 
     const priv = subscribePrivate(code, playerId, (r) => setRole(r));
@@ -49,7 +53,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
 
     // Announce join after channel subscribes
     const announce = setInterval(() => {
-      if ((ch as any).state === 'joined') {
+      if (ch.state === 'joined') {
         sendEvent(ch, { type: 'join', playerId, name }).catch(() => {});
         sendEvent(ch, { type: 'request-state', playerId }).catch(() => {});
         clearInterval(announce);
@@ -65,7 +69,7 @@ export function usePlayer(code: string, playerId: string, name: string) {
 
     // Ping loop
     const pingLoop = setInterval(() => {
-      if (chRef.current && (chRef.current as any).state === 'joined') {
+      if (chRef.current && chRef.current.state === 'joined') {
         sendEvent(chRef.current, { type: 'ping', playerId, t: performance.now() }).catch(() => {});
       }
     }, 1000);

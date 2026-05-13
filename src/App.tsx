@@ -34,7 +34,9 @@ export default function App() {
           if (p.playerId && p.name) {
             setView({ kind: 'player', code: prefillCode, name: p.name, playerId: p.playerId });
           }
-        } catch {}
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
   }, [prefillCode, view.kind]);
@@ -70,7 +72,9 @@ export default function App() {
           try {
             const existing = JSON.parse(existingRaw);
             if (existing.playerId) playerId = existing.playerId;
-          } catch {}
+          } catch (e) {
+            console.error(e);
+          }
         }
         if (!playerId) playerId = randomId();
         localStorage.setItem(`savetimmy:player:${code}`, JSON.stringify({ playerId, name }));

@@ -566,9 +566,9 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
   return state;
 }
 
-export function endMatch(state: GameState, winner: 'rescuers' | 'imposter', reason: any) {
+export function endMatch(state: GameState, winner: 'rescuers' | 'imposter', reason: 'barge' | 'whale_died') {
   if (state.ended) return;
-  const imposterIds = (state as any)._imposterIds as string[] | undefined || [];
+  const imposterIds = (state as GameState & { _imposterIds?: string[] })._imposterIds || [];
   const imposterCharacters: CharacterId[] = [];
   const imposterNames: string[] = [];
   

@@ -12,6 +12,10 @@ type Props = {
   onLeave: () => void;
 };
 
+interface HTMLElementWithFullscreen extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>;
+}
+
 export function PlayerView({ code, name, playerId, onLeave }: Props) {
   const { state, role, assignments, ping, setInput, pressConference, vote, ready } = usePlayer(code, playerId, name);
   const [hupenFlash, setHupenFlash] = useState(false);
@@ -129,10 +133,11 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
     const handleReadyClick = async () => {
       if (canReady && !isReady) {
         try {
-          if (document.documentElement.requestFullscreen) {
-            await document.documentElement.requestFullscreen();
-          } else if ((document.documentElement as any).webkitRequestFullscreen) {
-            await (document.documentElement as any).webkitRequestFullscreen();
+          const docEl: HTMLElementWithFullscreen = document.documentElement;
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen();
+          } else if (docEl.webkitRequestFullscreen) {
+            await docEl.webkitRequestFullscreen();
           }
         } catch (e) {
           console.warn('Fullscreen request failed or not supported:', e);

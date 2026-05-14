@@ -532,8 +532,9 @@ function drawFxBelow(ctx: CanvasRenderingContext2D, state: GameState) {
       ctx.translate(fx.x, fx.y);
       ctx.rotate(fx.heading!);
       
-      const spread = 10 + age * 45;
-      const length = 15 + age * 60;
+      const speedFactor = Math.min(1, (fx.speed || 0) / 150);
+      const length = (15 + age * 60) * (0.5 + speedFactor * 0.5);
+      const spread = (10 + age * 45) * (0.7 + speedFactor * 0.3);
       
       ctx.beginPath();
       ctx.moveTo(-length, -spread);

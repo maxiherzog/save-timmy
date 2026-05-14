@@ -228,7 +228,7 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
         // calculate velocity angle for better wake direction
         const velocityAngle = Math.atan2(boat.vy, boat.vx);
         // Spawn at the center (thickest point)
-        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x + boat.vx * 0.1, y: boat.y + boat.vy * 0.1, t: now, heading: velocityAngle });
+        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: velocityAngle, speed: currentSpeed });
       }
     }
 
@@ -378,7 +378,7 @@ function updateWhale(state: GameState, dt: number) {
     } else {
       if (baseSpeed > 5 && Math.random() < 0.0005*baseSpeed) {
         // Spawn at the center
-        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x, y: w.y, t: performance.now() / 1000, heading: w.heading });
+        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: w.x, y: w.y, t: performance.now() / 1000, heading: w.heading, speed: baseSpeed });
       }
     }
   }

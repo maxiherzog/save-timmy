@@ -407,6 +407,11 @@ function updateWhale(state: GameState, dt: number) {
 
   for (const p of Object.values(state.players)) {
     if (!p.boat.alive) continue;
+    
+    if (!p.boat.stats) {
+        p.boat.stats = { hupen: 0, trampeln: 0, rams: 0, healTime: 0 };
+    }
+    
     const dx = w.x - p.boat.x;
     const dy = w.y - p.boat.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -423,6 +428,11 @@ function updateWhale(state: GameState, dt: number) {
         playCrashSound(speedFactor);
       }
     }
+    if (!p.input) {
+        console.error('Player input is missing in updateWhale! Fixing it.', p);
+        p.input = { joystickX: 0, joystickY: 0, hupen: false, trampeln: false };
+    }
+
     if (p.input.hupen && p.boat.hupenCooldown <= 0) {
       p.boat.hupenCooldown = 3;
       p.boat.stats.hupen += 1;

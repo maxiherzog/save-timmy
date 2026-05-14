@@ -23,10 +23,10 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
   const stats = Object.values(state.players).map((p) => ({
     name: p.name,
     character: characterById(p.characterId),
-    hupen: p.boat.stats.hupen,
-    trampeln: p.boat.stats.trampeln,
-    rams: p.boat.stats.rams,
-    healTime: p.boat.stats.healTime,
+    hupen: p.boat.stats?.hupen ?? 0,
+    trampeln: p.boat.stats?.trampeln ?? 0,
+    rams: p.boat.stats?.rams ?? 0,
+    healTime: p.boat.stats?.healTime ?? 0,
     isImposter: e.imposterIds.includes(p.id),
   }));
 

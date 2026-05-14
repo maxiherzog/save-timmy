@@ -85,14 +85,17 @@ export async function sendState(ch: RealtimeChannel, state: GameState) {
   delete clean.bargeDrift;
   delete (clean as GameState & { _imposterIds?: string[] })._imposterIds;
 
-
   // Further player-specific cleanup
   const cleanPlayers: Record<string, Partial<Player>> = {};
-  for (const [id, p] of Object.entries(clean.players as Record<string, Player>)) {
+  for (const [id, p] of Object.entries(state.players)) {
     const cleanP: Partial<Player> = { ...p };
     delete cleanP.input;
-    delete (cleanP.boat as Partial<Player['boat']>)?.stats;
     delete cleanP.lastSeen;
+    
+    // Deep copy boat to safely remove stats without affecting host state
+    cleanP.boat = { ...p.boat };
+    delete (cleanP.boat as Partial<Player['boat']>).stats;
+    
     cleanPlayers[id] = cleanP;
   }
   clean.players = cleanPlayers as Record<string, Player>;

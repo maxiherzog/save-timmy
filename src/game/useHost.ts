@@ -193,9 +193,23 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     }
 
     async function ensureRoom() {
-      await supabase
-        .from('rooms')
-        .upsert({ code, state: 'lobby', host_token: hostToken }, { onConflict: 'code' });
+      // First try to select to see if it exists
+      const { data } = await supabase.from('rooms').select('code').eq('code', code).maybeSingle();
+      
+      if (data) {
+        // Exists, update it
+        const { error } = await supabase
+          .from('rooms')
+          .update({ state: 'lobby', host_token: hostToken })
+          .eq('code', code);
+        if (error) console.warn('Could not update room in database:', error);
+      } else {
+        // Doesn't exist, insert it
+        const { error } = await supabase
+          .from('rooms')
+          .insert({ code, state: 'lobby', host_token: hostToken });
+        if (error) console.warn('Could not insert room in database:', error);
+      }
     }
     ensureRoom();
 

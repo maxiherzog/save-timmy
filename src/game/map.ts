@@ -75,13 +75,18 @@ function coastlinePoly(
 ): Array<[number, number]> {
   const poly: Array<[number, number]> = [];
   const depths: number[] = [];
+  const seed = rng() * 10000;
+  
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
-    const baseDepth = depthMin + rng() * (depthMax - depthMin);
+    // Use noise2D for smooth variation between 0 and 1
+    const n = noise2D(t * 8, 0, seed);
+    const baseDepth = depthMin + n * (depthMax - depthMin);
     const offset = depthProfile ? depthProfile(t) : 0;
     depths.push(baseDepth + offset);
   }
-  // Smooth depths a bit
+  
+  // Smooth depths a bit more just in case
   for (let k = 0; k < 2; k++) {
     for (let i = 1; i < depths.length - 1; i++) {
       depths[i] = (depths[i - 1] + depths[i] + depths[i + 1]) / 3;
@@ -181,7 +186,7 @@ function makeCoastBank(
   rng: () => number,
   depthProfile?: (t: number) => number,
 ): Sandbank {
-  const poly = coastlinePoly(side, start, end, dMin, dMax, 28, rng, depthProfile);
+  const poly = coastlinePoly(side, start, end, dMin, dMax, 80, rng, depthProfile);
   const bb = bbox(poly);
   return {
     x: (bb.minX + bb.maxX) / 2,
@@ -209,6 +214,33 @@ const DECORATION_ASSETS = {
   house: 'lighthouse1.png',
 };
 
+function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number) {
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq != 0) param = dot / len_sq;
+  let xx, yy;
+  if (param < 0) { xx = x1; yy = y1; }
+  else if (param > 1) { xx = x2; yy = y2; }
+  else { xx = x1 + param * C; yy = y1 + param * D; }
+  const dx = px - xx;
+  const dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function minDistToPoly(x: number, y: number, poly: Array<[number, number]>) {
+  let min = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const d = distToSegment(x, y, poly[i][0], poly[i][1], poly[j][0], poly[j][1]);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
 function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: number) {
   let lighthousePlaced = false;
 
@@ -226,7 +258,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         const x = bb.minX + rng() * (bb.maxX - bb.minX);
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
-        if (pointInPoly(x, y, sb.poly)) {
+        if (pointInPoly(x, y, sb.poly) && minDistToPoly(x, y, sb.poly) > 20) {
           let foliageNoise = noise2D(x * 0.02, y * 0.02, seed);
           // Bias foliage downwards (y increases downwards)
           foliageNoise *= (0.5 + (y / MAP_H) * 1.0); 

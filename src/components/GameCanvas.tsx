@@ -106,9 +106,9 @@ export function GameCanvas({ state }: Props) {
           for (let i = 1; i < sb.poly.length; i++) ctx.lineTo(sb.poly[i][0], sb.poly[i][1]);
           ctx.closePath();
           // Per-bank pulsing phase
-          const bankPhase = whalePhase * 2.5 + (sb.x * 0.01 + sb.y * 0.02);
-          ctx.strokeStyle = `rgba(100, 200, 255, ${0.6 + Math.sin(bankPhase) * 0.4})`;
-          ctx.lineWidth = 12 + Math.sin(bankPhase * 0.8) * 10;
+          const bankPhase = whalePhase * 1.5 + (sb.x * 0.01 + sb.y * 0.02);
+          ctx.strokeStyle = `rgba(100, 200, 255, ${0.7 + Math.sin(bankPhase) * 0.3})`;
+          ctx.lineWidth = 15 + Math.sin(bankPhase * 0.8) * 12;
           ctx.stroke();
           ctx.restore();
 

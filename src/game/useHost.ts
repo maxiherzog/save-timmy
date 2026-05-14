@@ -175,19 +175,10 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     chRef.current = ch;
 
     if (testMode) {
-      handleEvent({ type: 'join', playerId: 'dummy-1', name: 'Dummy' });
-      handleEvent({ type: 'join', playerId: 'dummy-2', name: 'Dummy 2' });
-      // Wait a bit to ensure they are registered, then start
+      handleEvent({ type: 'join', playerId: 'dummy-1', name: 'Test-Spieler' });
       setTimeout(() => {
         if (stateRef.current?.phase === 'lobby') {
-          startMatch(imposterCount);
-          setTimeout(() => {
-            if (stateRef.current) {
-              for (const p of Object.values(stateRef.current.players)) {
-                handleEvent({ type: 'ready', playerId: p.id });
-              }
-            }
-          }, 4000); // Wait for starting phase to finish
+          startMatch(1);
         }
       }, 500);
     }

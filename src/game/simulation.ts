@@ -29,7 +29,7 @@ export function createSpawnPoints(playerCount: number, sandbanks: Sandbank[]): {
   const minX = 100;
   const maxX = MAP_W - 400; // Avoid spawning too close to the barge
   const spacing = 150;
-  const spawnOffset = -25; // Spawn 25px "above" the shoreline (in the water)
+  const spawnOffset = -45; // Spawn 45px "above" the shoreline (in the water)
 
   const bottomCoast = sandbanks.find(s => s.y > MAP_H / 2 && s.name === '');
 
@@ -54,6 +54,7 @@ export function createSpawnPoints(playerCount: number, sandbanks: Sandbank[]): {
       while(anySandbank([bottomCoast], x, shorelineY)) {
         shorelineY -= 5;
       }
+      shorelineY -= 20; // Extra buffer to ensure it's well in the water
     }
 
     points.push({
@@ -263,7 +264,7 @@ function applyPush(whale: Whale, srcX: number, srcY: number, radius: number, str
   
   // Make it easier to push Timmy off the sandbank (1.5 instead of 0.9)
   const stuckMul = whale.state === 'stranded' ? 1.5 : 1;
-  const f = strength * falloff * 160 * stuckMul;
+  const f = strength * falloff * 120 * stuckMul;
   
   whale.x += (dx / dist) * f * 0.016;
   whale.y += (dy / dist) * f * 0.016;

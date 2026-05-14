@@ -31,8 +31,8 @@ export function EndScreen({ state, onRematch, onLeave, isHost }: Props) {
   }));
 
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-black z-40 overflow-auto">
-      <div className="max-w-5xl mx-auto px-8 py-10">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-black z-40 overflow-y-auto">
+      <div className="max-w-5xl mx-auto px-8 py-10 min-h-full">
         <div className="flex items-center justify-center gap-3 mb-2">
           {isRescuersWin ? (
             <Trophy className="w-12 h-12 text-emerald-400" />

@@ -94,7 +94,7 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
 
   if (state.phase === 'lobby') {
     return (
-      <div className="min-h-[100dvh] flex flex-col p-4 sm:p-6">
+      <div className="fixed inset-0 flex flex-col p-4 sm:p-6 overflow-hidden">
         <div className="text-center my-8">
           <div className="text-sm uppercase tracking-widest text-slate-500 mb-2">Raum {code}</div>
           <div className="text-3xl font-bold mb-2">Hallo, {name}!</div>

@@ -29,7 +29,7 @@ export function createSpawnPoints(playerCount: number, sandbanks: Sandbank[]): {
   const minX = 100;
   const maxX = MAP_W - 400; // Avoid spawning too close to the barge
   const spacing = 150;
-  const spawnOffset = -45; // Spawn 45px "above" the shoreline (in the water)
+  const spawnOffset = -70; // Spawn 70px "above" the shoreline (in the water)
 
   const bottomCoast = sandbanks.find(s => s.y > MAP_H / 2 && s.name === '');
 
@@ -54,7 +54,7 @@ export function createSpawnPoints(playerCount: number, sandbanks: Sandbank[]): {
       while(anySandbank([bottomCoast], x, shorelineY)) {
         shorelineY -= 5;
       }
-      shorelineY -= 20; // Extra buffer to ensure it's well in the water
+      shorelineY -= 40; // Extra buffer to ensure it's well in the water
     }
 
     points.push({

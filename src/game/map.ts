@@ -206,12 +206,10 @@ const SANDBANK_NAMES = [
 ];
 
 const DECORATION_ASSETS = {
-  foliage: ['bush1.png', 'bush2.png', 'bush3.png', 'bush4.png', 'grass1.png', 'grass2.png'],
-  stones: ['stone1.png', 'stone2.png', 'stone3.png', 'stone4.png', 'stone5.png'],
-  pebbles: ['pebbles1.png', 'pebbles2.png', 'pebbles3.png'],
-  shells: ['seashell1.png', 'seashell2.png', 'seashell3.png'],
+  foliage: ['bush1.png', 'bush2.png', 'bush3.png', 'gras1.png', 'gras2.png', 'gras3.png', 'gras4.png', 'gras5.png', 'gras6.png'],
+  stones: ['stone1.png', 'stone2.png', 'stone3.png', 'stone4.png', 'stone5.png', 'stone6.png'],
+  shells: ['shell1.png', 'shell2.png', 'shell3.png', 'shell4.png'],
   trees: ['tree1.png', 'tree2.png'],
-  house: 'lighthouse1.png',
 };
 
 function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number) {
@@ -242,8 +240,7 @@ function minDistToPoly(x: number, y: number, poly: Array<[number, number]>) {
 }
 
 function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: number) {
-  let lighthousePlaced = false;
-
+  // No more lighthouse placement
   for (const sb of sandbanks) {
     const isCoast = sb.name === '';
     const bb = bbox(sb.poly);
@@ -270,55 +267,43 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
           let asset = '';
           let scale = 0.12 + rng() * 0.05;
           
-          if (isCoast) {
-            const roll = rng();
-            if (!lighthousePlaced && roll < 0.01) {
-              asset = DECORATION_ASSETS.house;
-              scale = 0.2;
-              lighthousePlaced = true;
-            } else if (roll < 0.5) {
-              // Probability scales with foliageNoise
-              if (rng() < foliageNoise * 1.5) {
-                asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
-              }
-            } else if (roll < 0.7) {
-              // Probability scales with stoneNoise
-              if (rng() < stoneNoise * 1.2) {
-                asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
-              }
-            } else if (roll < 0.85) {
-              if (rng() < stoneNoise * 0.8) {
-                asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
-              }
-            } else if (roll < 0.95) {
-              // Trees: stronger dependence on noise
-              if (rng() < foliageNoise * foliageNoise * 2.0) {
-                asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
-                scale = 0.2 + rng() * 0.1;
+            if (isCoast) {
+              const roll = rng();
+              if (roll < 0.5) {
+                // Probability scales with foliageNoise
+                if (rng() < foliageNoise * 1.5) {
+                  asset = DECORATION_ASSETS.foliage[Math.floor(rng() * DECORATION_ASSETS.foliage.length)];
+                }
+              } else if (roll < 0.75) {
+                // Probability scales with stoneNoise
+                if (rng() < stoneNoise * 1.2) {
+                  asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+                }
+              } else if (roll < 0.9) {
+                // Trees: stronger dependence on noise
+                if (rng() < foliageNoise * foliageNoise * 2.0) {
+                  asset = DECORATION_ASSETS.trees[Math.floor(rng() * DECORATION_ASSETS.trees.length)];
+                  scale = 0.2 + rng() * 0.1;
+                }
+              } else {
+                if (rng() < stoneNoise * 0.5) {
+                  asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+                  scale = 0.08 + rng() * 0.04;
+                }
               }
             } else {
-              if (rng() < stoneNoise * 0.5) {
-                asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-                scale = 0.08 + rng() * 0.04;
+              const roll = rng();
+              if (roll < 0.7) {
+                if (rng() < stoneNoise * 1.0) {
+                  asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
+                }
+              } else {
+                if (rng() < stoneNoise * 0.4) {
+                  asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
+                  scale = 0.05 + rng() * 0.03;
+                }
               }
             }
-          } else {
-            const roll = rng();
-            if (roll < 0.6) {
-              if (rng() < stoneNoise * 1.0) {
-                asset = DECORATION_ASSETS.pebbles[Math.floor(rng() * DECORATION_ASSETS.pebbles.length)];
-              }
-            } else if (roll < 0.9) {
-              if (rng() < stoneNoise * 0.8) {
-                asset = DECORATION_ASSETS.stones[Math.floor(rng() * DECORATION_ASSETS.stones.length)];
-              }
-            } else {
-              if (rng() < stoneNoise * 0.4) {
-                asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-                scale = 0.05 + rng() * 0.03;
-              }
-            }
-          }
 
           if (asset && asset.startsWith('tree')) {
             let tooClose = false;

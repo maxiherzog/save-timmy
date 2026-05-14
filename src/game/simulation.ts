@@ -520,6 +520,9 @@ export function stepSimulation(state: GameState, dt: number, now: number): GameS
     
       const players = Object.values(state.players);
       for (const p of players) {
+        if (!p.input) {
+            p.input = { joystickX: 0, joystickY: 0, hupen: false, trampeln: false };
+        }
         if (p.connected) updateBoat(p, p.input, dt, state, now);
       }
     

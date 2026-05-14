@@ -228,7 +228,7 @@ function updateBoat(p: { id: string, boat: Boat }, input: PlayerInput, dt: numbe
         // calculate velocity angle for better wake direction
         const velocityAngle = Math.atan2(boat.vy, boat.vx);
         // Spawn at the center (thickest point)
-        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x, y: boat.y, t: now, heading: velocityAngle });
+        state.fx.push({ id: fxIdCounter++, kind: 'wake', x: boat.x + boat.vx * 0.1, y: boat.y + boat.vy * 0.1, t: now, heading: velocityAngle });
       }
     }
 

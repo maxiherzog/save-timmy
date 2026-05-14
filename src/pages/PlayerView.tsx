@@ -4,6 +4,7 @@ import { Throttle } from '../controller/Throttle';
 import { SteeringSlider } from '../controller/SteeringSlider';
 import { characterById } from '../game/characters';
 import { Siren, Mic, Waves, AlertTriangle, Heart, LogOut, Wifi, Footprints } from 'lucide-react';
+import { EndScreen } from '../components/EndScreen';
 
 type Props = {
   code: string;
@@ -85,6 +86,10 @@ export function PlayerView({ code, name, playerId, onLeave }: Props) {
         </button>
       </div>
     );
+  }
+
+  if (state.phase === 'ended') {
+    return <EndScreen state={state} onLeave={onLeave} isHost={false} />;
   }
 
   if (state.phase === 'lobby') {

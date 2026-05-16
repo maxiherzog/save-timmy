@@ -12,13 +12,15 @@ import {
   type NetEvent,
 } from './net';
 
-const BROADCAST_HZ = 12;
+const BROADCAST_HZ_ACTIVE = 10;
+const BROADCAST_HZ_IDLE = 2;
 
 export function useHost(code: string, hostToken: string, imposterCount: number = 1, testMode: boolean = false) {
   const [state, setState] = useState<GameState | null>(null);
   const stateRef = useRef<GameState | null>(null);
   const chRef = useRef<ReturnType<typeof subscribeRoom> | null>(null);
   const runningRef = useRef(false);
+  const lastBroadcastRef = useRef(0);
 
   const startMatch = useCallback(async (imposterCount: number) => {
     const s = stateRef.current;
@@ -51,15 +53,15 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
 
     for (const p of Object.values(s.players)) p.ready = false;
     s.phase = 'starting';
-    // Immediately inform players about the new phase
-    if (chRef.current) sendState(chRef.current, s).catch(() => {});
+    // Immediately inform players about the new phase in the next frame
+    lastBroadcastRef.current = 0;
     setState({ ...s });
 
     setTimeout(() => {
       if (!stateRef.current) return;
       if (stateRef.current.phase === 'starting') {
         stateRef.current.phase = 'ready';
-        if (chRef.current) sendState(chRef.current, stateRef.current).catch(() => {});
+        lastBroadcastRef.current = 0;
         setState({ ...stateRef.current });
       }
     }, 3500);
@@ -95,7 +97,7 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     }
     stateRef.current = fresh;
     setState({ ...fresh });
-    if (chRef.current) sendState(chRef.current, fresh).catch(() => {});
+    lastBroadcastRef.current = 0; // force broadcast in next tick
     supabase.from('rooms').update({ state: 'lobby', ended_at: null }).eq('code', code);
   }, [code]);
 
@@ -137,14 +139,14 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
         p.connected = true;
       }
     } else if (e.type === 'request-state') {
-      if (chRef.current) sendState(chRef.current, s).catch(() => {});
+      // Rather than immediately broadcasting the state which can cause network spikes
+      // if multiple players join or request at once, we just flag that a broadcast is needed
+      // in the next frame. The game loop will handle it cleanly.
+      lastBroadcastRef.current = 0; 
     } else if (e.type === 'press-conference') {
       startVote(s, e.playerId, now);
-      // Force a broadcast immediately after starting a vote
-      if (chRef.current) {
-        sendState(chRef.current, s).catch(() => {});
-        sendEvent(chRef.current, { type: 'press-conference-started' }).catch(() => {});
-      }
+      // Force a broadcast in the very next frame to avoid immediate spikes inside the event handler
+      lastBroadcastRef.current = 0;
       setState({ ...s });
     } else if (e.type === 'vote') {
       castVote(s, e.playerId, e.targetId);
@@ -205,7 +207,6 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
     ensureRoom();
 
     let last = performance.now();
-    let lastBroadcast = 0;
     let frame: number;
 
     function loop() {
@@ -224,8 +225,13 @@ export function useHost(code: string, hostToken: string, imposterCount: number =
           p.status = nowSec - p.lastSeen > 1 ? 'disconnected' : 'connected';
         }
         stepSimulation(s, dt, nowSec);
-        if (now - lastBroadcast > 1000 / BROADCAST_HZ) {
-          lastBroadcast = now;
+
+        const currentHz = (s.phase === 'playing' || s.phase === 'starting' || s.phase === 'countdown') 
+          ? BROADCAST_HZ_ACTIVE 
+          : BROADCAST_HZ_IDLE;
+
+        if (now - lastBroadcastRef.current > 1000 / currentHz) {
+          lastBroadcastRef.current = now;
           if (chRef.current) sendState(chRef.current, s).catch(() => {});
           setState({ ...s });
         }

@@ -30,16 +30,22 @@ export function usePlayer(code: string, playerId: string, name: string) {
   useEffect(() => {
     if (!code || !playerId || !name) return;
 
+    let lastStateTime = performance.now();
+
     const ch = subscribeRoom(code, {
       onEvent: (e) => {
         if (e.type === 'pong' && e.playerId === playerId) {
           setPing(performance.now() - e.t);
         }
         if (e.type === 'press-conference-started') {
-          if (chRef.current) sendEvent(chRef.current, { type: 'request-state', playerId }).catch(() => {});
+          // REMOVED: Do not request state here! The host already broadcasts it immediately upon starting the press conference.
+          // This was causing a network storm: N players sent a request, host replied with N states all at once.
         }
       },
-      onState: (msg) => setState(msg.state as GameState),
+      onState: (msg) => {
+        lastStateTime = performance.now();
+        setState(msg.state as GameState);
+      },
       onAssignments: (list) => {
         const map: Record<string, CharacterId> = {};
         for (const a of list) map[a.playerId] = a.characterId;
@@ -65,12 +71,17 @@ export function usePlayer(code: string, playerId: string, name: string) {
       if (chRef.current) {
         sendEvent(chRef.current, { type: 'input', playerId, input: { ...inputRef.current }, ping: pingRef.current }).catch(() => {});
       }
-    }, 100);
+    }, 150); // Reduced from 100ms (10Hz) to 150ms (~6.6Hz) to prevent hitting 100msg/sec Realtime limits
 
     // Ping loop
     const pingLoop = setInterval(() => {
       if (chRef.current && chRef.current.state === 'joined') {
         sendEvent(chRef.current, { type: 'ping', playerId, t: performance.now() }).catch(() => {});
+        
+        // Failsafe: if we haven't received a state update for 2 seconds, request one
+        if (performance.now() - lastStateTime > 2000) {
+          sendEvent(chRef.current, { type: 'request-state', playerId }).catch(() => {});
+        }
       }
     }, 1000);
 

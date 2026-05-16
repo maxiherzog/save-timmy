@@ -249,13 +249,13 @@ function minDistToPoly(x: number, y: number, poly: Array<[number, number]>) {
   return min;
 }
 
-function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: number) {
+function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
   for (const sb of sandbanks) {
     const isCoast = sb.name === '';
     const bb = bbox(sb.poly);
     const area = (bb.maxX - bb.minX) * (bb.maxY - bb.minY);
     
-    const count = Math.floor((area / (isCoast ? 500 : 1500)) * (0.8 + rng() * 0.4));
+    const count = Math.floor((area / (isCoast ? 1800 : 3600)) * (0.8 + rng() * 0.4));
     
     for (let i = 0; i < count; i++) {
       let attempts = 0;
@@ -264,10 +264,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number, seed: num
         const y = bb.minY + rng() * (bb.maxY - bb.minY);
 
         if (pointInPoly(x, y, sb.poly) && minDistToPoly(x, y, sb.poly) > 20) {
-          let foliageNoise = noise2D(x * 0.02, y * 0.02, seed);
-          foliageNoise *= (0.5 + (y / MAP_H) * 1.0); 
-          let stoneNoise = noise2D(x * 0.04, y * 0.04, seed + 123);
-          if (y > MAP_H * 0.7) stoneNoise *= 0.7;
+          // Noises removed because they were unused
 
           let asset = '';
           let scale = 0.12;
@@ -392,7 +389,7 @@ export function createMap(seed: number): Sandbank[] {
     }
   }
 
-  populateDecorations(sandbanks, rng, seed);
+  populateDecorations(sandbanks, rng);
 
   return sandbanks;
 }

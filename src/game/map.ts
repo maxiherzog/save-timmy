@@ -282,7 +282,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
                 scale = 0.15 + rng() * 0.2;
             } else {
                 asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-                scale = 0.08 + rng() * 0.04;
+                scale = 0.12 + rng() * 0.06;
             }
           } else {
             const roll = rng();
@@ -291,7 +291,7 @@ function populateDecorations(sandbanks: Sandbank[], rng: () => number) {
                 scale = 0.15 + rng() * 0.2;
             } else {
                 asset = DECORATION_ASSETS.shells[Math.floor(rng() * DECORATION_ASSETS.shells.length)];
-                scale = 0.06 + rng() * 0.04;
+                scale = 0.10 + rng() * 0.05;
             }
           }
 
